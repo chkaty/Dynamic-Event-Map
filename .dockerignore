@@ -1,0 +1,71 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+CHANGELOG.md
+CONTRIBUTING.md
+DEPLOYMENT.md
+QUICKSTART.md
+ARCHITECTURE.md
+
+# CI/CD
+.github
+
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Testing
+__tests__
+coverage
+.nyc_output
+*.test.js
+*.spec.js
+jest.config.js
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Build artifacts
+dist
+build
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Backups
+backups
+*.sql
+*.dump
+
+# Development only
+docker-compose.yml
+docker-compose.override.yml
+monitoring
+scripts/backup.sh
+nginx/nginx.conf
