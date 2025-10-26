@@ -69,7 +69,8 @@ jobs:
         with:
           host: ${{ vars.DO_SSH_HOST }}
           username: ${{ vars.DO_SSH_USER }}
-          password: ${{ secrets.DO_SSH_PASS }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
           source: "stack.yml,db/*"
           target: "/root/deploy/"
 
@@ -79,7 +80,8 @@ jobs:
         with:
           host: ${{ vars.DO_SSH_HOST }}
           username: ${{ vars.DO_SSH_USER }}
-          password: ${{ secrets.DO_SSH_PASS }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
           script: |
             set -euo pipefail
 
