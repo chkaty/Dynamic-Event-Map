@@ -17,7 +17,7 @@ env:
   REGISTRY: ghcr.io
   STACK: eventmap
   OWNER: ${{ github.repository_owner }}
-  REPO: ${{ github.repository }}
+  REPO: ${{ github.event.repository.name }}
 
 jobs:
   build-and-deploy:
