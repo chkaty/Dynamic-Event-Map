@@ -37,20 +37,8 @@ run() {
   fi
 }
 
-echo "cleanup stopped containers (older than ${STOPPED_KEEP_HOURS} hours):"
-run "docker container prune -f --filter \"until=${STOPPED_KEEP_HOURS}h\""
-
-echo "cleanup unused docker objects:"
-run "docker network prune -f"
-
-echo "cleanup dangling and unused images (older than ${KEEP_HOURS} hours):"
-run "docker image prune -af --filter \"until=${KEEP_HOURS}h\""
-
-echo "cleanup buildx cache (older than ${KEEP_HOURS} hours):"
-run "docker buildx prune -af --filter \"until=${KEEP_HOURS}h\" || true"
-
-echo "cleanup unused volumes:"
-run "docker volume prune -f"
+echo "cleanup up everything stopped or unused (older than ${STOPPED_KEEP_HOURS} hours):"
+run "docker system prune -a -f --filter \"until=${STOPPED_KEEP_HOURS}h\""
 
 echo "cleanup system caches:"
 run "apt-get clean || true"

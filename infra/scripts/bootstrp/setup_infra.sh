@@ -17,6 +17,23 @@ echo "[*] Using INFRA: $INFRA"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y awscli logrotate jq curl ca-certificates
+
+# env
+mkdir -p "$INFRA/env"
+if [ ! -f "$INFRA/env/.env.backup" ]; then
+  cp "$INFRA/env/.env.backup.example" "$INFRA/env/.env.backup"
+  echo "[!] please fill in Spaces/DO values in $INFRA/env/.env.backup"
+fi
+
+# local backup dir
+ENV_FILE="$INFRA/env/.env.backup"
+BACKUP_ROOT="$(grep -E '^BACKUP_ROOT=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)"
+BACKUP_ROOT="${BACKUP_ROOT:-/mnt/pgdata/backups}"
+mkdir -p "$BACKUP_ROOT"
+chmod 700 "$BACKUP_ROOT"
+
+echo "[*] BACKUP_ROOT: $BACKUP_ROOT"
+
 # install systemd units + timers
 install_unit() {
   local svc="$1"
@@ -30,10 +47,19 @@ install_unit() {
   echo "    enabled: $timer"
 }
 
+echo "[*] Installing backup timers..."
+install_unit "db-backup.service"    "db-backup.timer"    "$INFRA/system/backup"
 
 echo "[*] Installing docker-clean timers..."
 install_unit "docker-clean.service" "docker-clean.timer" "$INFRA/system/dockerclean"
 
+# read env in systemd units
+SED_ENV='s|^EnvironmentFile=.*|EnvironmentFile='"$INFRA"'/env/.env.backup|g'
+for S in /etc/systemd/system/*.service; do
+  if grep -q 'EnvironmentFile=' "$S"; then
+    sed -i "$SED_ENV" "$S"
+  fi
+done
 systemctl daemon-reload
 
 # logrotate
@@ -42,5 +68,11 @@ cp "$INFRA/logrotate/nginx"        /etc/logrotate.d/nginx
 cp "$INFRA/logrotate/docker-clean" /etc/logrotate.d/docker-clean
 logrotate -d /etc/logrotate.conf >/dev/null || true
 echo "    logrotate dry-run OK"
+
+# first run
+echo "[*] Running first backup (one-shot)"
+systemctl start db-backup.service || true
+sleep 2
+journalctl -u db-backup.service -n 100 --no-pager || true
 
 echo "[✓] Setup finished."

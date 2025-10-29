@@ -137,17 +137,8 @@ jobs:
             echo "[✓] Done. Current services:"
             docker service ls
 
-            echo "[*] Prune unused containers/networks"
-            docker system prune -f
-
-            echo "[*] Prune unused images"
-            docker image prune -af || true
-
-            echo "[*] Prune buildx caches"
-            docker buildx prune -af || true
-
-            echo "[*] Prune volumes not used by any container"
-            docker volume prune -f || true
+            echo "[*] Prune unused or stopped containers/networks/images/volumes ... "
+            docker system prune -a -f
 
             echo "[✓] Disk usage after prune:"
             docker system df
