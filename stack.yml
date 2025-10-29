@@ -79,7 +79,11 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$([ -f /run/secrets/redis_password ] && cat /run/secrets/redis_password)\" ping | grep PONG"]
+      test:
+      - CMD-SHELL
+      - >
+        REDIS_PASS=$$(cat /run/secrets/redis_password 2>/dev/null || true);
+        redis-cli -a "$$REDIS_PASS" PING | grep PONG;
       interval: 10s
       timeout: 3s
       retries: 5
