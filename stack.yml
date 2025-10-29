@@ -76,7 +76,7 @@ services:
     volumes:
       - redisdata:/data
     deploy:
-      restart_policy: { condition: any }
+      restart_policy: { condition: any, delay: 5s, max_attempts: 3 }
       resources:
         limits:
           memory: 256M
