@@ -133,19 +133,30 @@ mount -o defaults /dev/disk/by-id/<YOUR_VOLUME_ID> /mnt/pgdata
 echo "/dev/disk/by-id/<YOUR_VOLUME_ID> /mnt/pgdata ext4 defaults,nofail 0 2" >> /etc/fstab
 mount -a
 
-# Postgres in the official image runs as uid 999
-chown 999:999 /mnt/pgdata
+mkdir -p /mnt/pgdata/postgres-data
+mkdir -p /mnt/pgdata/redis-data
+
+chown -R 999:999 /mnt/pgdata/postgres-data
+chmod 700 /mnt/pgdata/postgres-data
+
+chmod 777 /mnt/pgdata/redis-data
 ```
 
 ### 3. Initialize Docker Swarm
 ```
 docker swarm init --advertise-addr <YOUR_PUBLIC_IPV4>
+
+docker node update --label-add postgres=true $(docker info --format '{{.Swarm.NodeID}}')
+docker node update --label-add redis=true $(docker info --format '{{.Swarm.NodeID}}')
 ```
 
-### 4. Create the Postgres password secret (one-time)
+### 4. Create the Postgres and redis password secret
 ```
 echo -n 'YOUR_STRONG_DB_PASSWORD' | docker secret create pg_password -
 docker secret ls | grep pg_password
+
+echo -n 'YOUR_STRONG_REDIS_PASSWORD' | docker secret create redis_password -
+docker secret ls | grep redis_password
 ```
 
 ### 5. Put your stack files on the droplet
@@ -201,6 +212,14 @@ docker service ps eventmap_client
 docker service logs -f eventmap_api
 docker service logs -f eventmap_db
 ```
+
+### 9. setup a scheduled timer to clean up docker 
+
+## Scheduled work
+
+Copy the `infra` folder to your droplet `root`:
+
+Run `bash /root/infra/scripts/bootstrap/setup-infra.sh`.
 
 ## CI/CD
 

@@ -74,7 +74,7 @@ jobs:
           source: "stack.yml,db/*"
           target: "/root/deploy/"
 
-      # ---- Deploy on droplet (password auth) ----
+      # ---- Deploy on droplet ----
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -104,14 +104,23 @@ jobs:
             fi
 
             echo "[*] Ensuring DO Volume mountpoint exists and permissions are correct..."
-            mkdir -p /mnt/pgdata
-            chown 999:999 /mnt/pgdata || true
+            mkdir -p /mnt/pgdata/redis-data
+            chown 999:999 /mnt/pgdata/redis-data || true
+
+            mkdir -p /mnt/pgdata/postgres-data
+            chown 999:999 /mnt/pgdata/postgres-data || true
 
             echo "[*] Ensuring pg_password secret exists..."
             if ! docker secret ls | awk '{print $2}' | grep -qx 'pg_password'; then
-              echo -n '${{ secrets.PG_PASSWORD }}' | docker secret create pg_password -
+              docker secret create pg_password /root/pg_password.txt
             else
               echo "pg_password already present."
+            fi
+
+            if ! docker secret ls | awk '{print $2}' | grep -qx 'redis_password'; then
+              docker secret create redis_password /root/redis_password.txt
+            else
+              echo "redis_password already present."
             fi
 
             echo "[*] Pulling freshly built images by SHA..."
@@ -127,4 +136,19 @@ jobs:
 
             echo "[✓] Done. Current services:"
             docker service ls
+
+            echo "[*] Prune unused containers/networks"
+            docker system prune -f
+
+            echo "[*] Prune unused images"
+            docker image prune -af || true
+
+            echo "[*] Prune buildx caches"
+            docker buildx prune -af || true
+
+            echo "[*] Prune volumes not used by any container"
+            docker volume prune -f || true
+
+            echo "[✓] Disk usage after prune:"
+            docker system df
 
