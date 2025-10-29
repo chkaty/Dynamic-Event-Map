@@ -47,11 +47,11 @@ install_unit() {
   echo "    enabled: $timer"
 }
 
-echo "[*] Installing backup timers..."
-install_unit "db-backup.service"    "db-backup.timer"    "$INFRA/system/backup"
+# echo "[*] Installing backup timers..."
+# install_unit "db-backup.service"    "db-backup.timer"    "$INFRA/system/db-backup"
 
 echo "[*] Installing docker-clean timers..."
-install_unit "docker-clean.service" "docker-clean.timer" "$INFRA/system/dockerclean"
+install_unit "docker-clean.service" "docker-clean.timer" "$INFRA/system/docker-clean"
 
 # read env in systemd units
 SED_ENV='s|^EnvironmentFile=.*|EnvironmentFile='"$INFRA"'/env/.env.backup|g'
@@ -70,9 +70,12 @@ logrotate -d /etc/logrotate.conf >/dev/null || true
 echo "    logrotate dry-run OK"
 
 # first run
-echo "[*] Running first backup (one-shot)"
-systemctl start db-backup.service || true
+# echo "[*] Running first backup (one-shot)"
+# systemctl start db-backup.service || true
+# sleep 2
+# journalctl -u db-backup.service -n 100 --no-pager || true
+echo "[*] Running first clean (one-shot)"
+systemctl start docker-clean.service || true
 sleep 2
-journalctl -u db-backup.service -n 100 --no-pager || true
-
+journalctl -u docker-clean.service -n 100 --no-pager || true
 echo "[✓] Setup finished."
