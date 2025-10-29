@@ -213,7 +213,7 @@ docker service logs -f eventmap_api
 docker service logs -f eventmap_db
 ```
 
-### 9. setup a scheduled timer to clean up docker 
+### 9. Setup a Scheduled Timer to Clean Up Docker
 
 ## Scheduled Clean & Backup
 
