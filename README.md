@@ -215,11 +215,12 @@ docker service logs -f eventmap_db
 
 ### 9. setup a scheduled timer to clean up docker 
 
-## Scheduled work
+## Scheduled Clean & Backup
 
-Copy the `infra` folder to your droplet `root`:
+Copy the `infra` folder to your droplet `/root/deploy`:
 
-Run `bash /root/infra/scripts/bootstrap/setup-infra.sh`.
+Run `bash /root/deploy/infra/scripts/bootstrap/setup_infra.sh`.
+
 
 ## CI/CD
 
@@ -231,7 +232,6 @@ On your repo, add those:
 
   - `GHCR_PAT` (token with read:packages and write:packages)
 
-  
   - `DO_SSH_KEY` (your private SSH key contents)
 
 - Repository variables:
