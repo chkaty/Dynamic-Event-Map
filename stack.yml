@@ -22,7 +22,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /mnt/redisdata/redis-data
+      device: /mnt/pgdata/redis-data
 
 secrets:
   pg_password:
