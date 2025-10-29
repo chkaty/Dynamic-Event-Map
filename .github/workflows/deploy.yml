@@ -111,7 +111,7 @@ jobs:
             chmod 700 /mnt/pgdata/postgres-data/pgdata || true
 
             chown -R 999:999 /mnt/pgdata/redis-data || true
-            chmod 750 /mnt/pgdata/redis-data || true
+            chmod 777 /mnt/pgdata/redis-data || true
 
             echo "[*] Ensuring pg_password secret exists..."
             if ! docker secret ls | awk '{print $2}' | grep -qx 'pg_password'; then
