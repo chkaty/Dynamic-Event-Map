@@ -48,29 +48,30 @@ install_unit() {
 }
 
 install_all_bins() {
-  local src_dir="$1"
-  local dst_dir="/usr/local/bin"
-  mkdir -p "$dst_dir"
-  mapfile -t scripts < <(find "$SRC_ROOT" -maxdepth 2 -type f -name '*.sh' | sort)
+  local src_root="${1:-/root/deploy/infra/scripts}"
+  local dest_dir="${2:-/usr/local/bin}"
+
+  echo "[*] Installing shell scripts from: $src_root -> $dest_dir"
+  mkdir -p "$dest_dir"
+
+  mapfile -t scripts < <(find "$src_root" -maxdepth 2 -type f -name '*.sh' | sort)
+
   if [ "${#scripts[@]}" -eq 0 ]; then
-    echo "WARN: no scripts found under $SRC_ROOT/*/*.sh"
+    echo "WARN: no scripts found under $src_root/*/*.sh"
     return 0
   fi
-  echo "[*] Installing shell scripts to $DEST_DIR ..."
-  for src in "${scripts[@]}"; do
-    base="$(basename "$src")"
-    dst="$DEST_DIR/$base"
 
-    # normalize line endings (in case something came from Windows)
-    # dos2unix may not exist; use awk fallback
+  for src in "${scripts[@]}"; do
+    local base dst tmp
+    base="$(basename "$src")"
+    dst="$dest_dir/$base"
+
     if command -v dos2unix >/dev/null 2>&1; then
       dos2unix -q "$src" || true
     else
-      # awk-based LF normalization
-      awk 'BEGIN{RS="\r\n"; ORS="\n"} {print}' "$src" > "${src}.lf" && mv "${src}.lf" "$src"
+      sed -i 's/\r$//' "$src"
     fi
 
-    # ensure a shebang exists; if missing, add a conservative /usr/bin/env bash
     if ! head -n1 "$src" | grep -qE '^#!'; then
       tmp="$(mktemp)"
       printf '%s\n' '#!/usr/bin/env bash' > "$tmp"
@@ -78,16 +79,15 @@ install_all_bins() {
       mv "$tmp" "$src"
     fi
 
-    # install with proper mode
     install -Dm755 "$src" "$dst"
-
-    # quick sanity show
     printf '    [✓] %s -> %s\n' "$src" "$dst"
   done
 
   echo "[*] Installed scripts:"
-  ls -l "$DEST_DIR"/*.sh 2>/dev/null || true
+  ls -l "$dest_dir"/*.sh 2>/dev/null || true
 }
+
+install_all_bins
 
 # echo "[*] Installing backup timers..."
 # install_unit "db-backup.service"    "db-backup.timer"    "$INFRA/system/db-backup"
