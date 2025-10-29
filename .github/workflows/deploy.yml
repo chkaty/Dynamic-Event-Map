@@ -104,9 +104,10 @@ jobs:
             fi
 
             echo "[*] Ensuring DO Volume mountpoint exists and permissions are correct..."
-            mkdir -p /mnt/pgdata
+            mkdir -p /mnt/pgdata/postgres-data
 
-            chown -R 999:999 /mnt/pgdata || true
+            chown -R 70:70 /mnt/pgdata/postgres-data || true
+            chmod 700 /mnt/pgdata/postgres-data || true
 
             echo "[*] Ensuring pg_password secret exists..."
             if ! docker secret ls | awk '{print $2}' | grep -qx 'pg_password'; then
