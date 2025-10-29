@@ -138,7 +138,7 @@ jobs:
             docker service ls
 
             echo "[*] Prune unused or stopped containers/networks/images/volumes ... "
-            docker system prune -a -f
+            docker system prune -a -f --filter "until=24h"
 
             echo "[✓] Disk usage after prune:"
             docker system df
