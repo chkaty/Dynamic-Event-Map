@@ -47,6 +47,48 @@ install_unit() {
   echo "    enabled: $timer"
 }
 
+install_all_bins() {
+  local src_dir="$1"
+  local dst_dir="/usr/local/bin"
+  mkdir -p "$dst_dir"
+  mapfile -t scripts < <(find "$SRC_ROOT" -maxdepth 2 -type f -name '*.sh' | sort)
+  if [ "${#scripts[@]}" -eq 0 ]; then
+    echo "WARN: no scripts found under $SRC_ROOT/*/*.sh"
+    return 0
+  fi
+  echo "[*] Installing shell scripts to $DEST_DIR ..."
+  for src in "${scripts[@]}"; do
+    base="$(basename "$src")"
+    dst="$DEST_DIR/$base"
+
+    # normalize line endings (in case something came from Windows)
+    # dos2unix may not exist; use awk fallback
+    if command -v dos2unix >/dev/null 2>&1; then
+      dos2unix -q "$src" || true
+    else
+      # awk-based LF normalization
+      awk 'BEGIN{RS="\r\n"; ORS="\n"} {print}' "$src" > "${src}.lf" && mv "${src}.lf" "$src"
+    fi
+
+    # ensure a shebang exists; if missing, add a conservative /usr/bin/env bash
+    if ! head -n1 "$src" | grep -qE '^#!'; then
+      tmp="$(mktemp)"
+      printf '%s\n' '#!/usr/bin/env bash' > "$tmp"
+      cat "$src" >> "$tmp"
+      mv "$tmp" "$src"
+    fi
+
+    # install with proper mode
+    install -Dm755 "$src" "$dst"
+
+    # quick sanity show
+    printf '    [✓] %s -> %s\n' "$src" "$dst"
+  done
+
+  echo "[*] Installed scripts:"
+  ls -l "$DEST_DIR"/*.sh 2>/dev/null || true
+}
+
 # echo "[*] Installing backup timers..."
 # install_unit "db-backup.service"    "db-backup.timer"    "$INFRA/system/db-backup"
 
