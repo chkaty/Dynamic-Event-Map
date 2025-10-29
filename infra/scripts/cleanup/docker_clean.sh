@@ -37,7 +37,7 @@ run() {
   fi
 }
 
-echo "cleanup up everything stopped or unused (older than ${STOPPED_KEEP_HOURS} hours):"
+echo "cleaning up everything stopped or unused (older than ${STOPPED_KEEP_HOURS} hours):"
 run "docker system prune -a -f --filter \"until=${STOPPED_KEEP_HOURS}h\""
 
 echo "cleanup system caches:"
