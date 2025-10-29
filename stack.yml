@@ -16,7 +16,13 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /mnt/pgdata/redis-data  
+      device: /mnt/pgdata/redis-data
+  dbinit:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /root/deploy/db
 
 secrets:
   pg_password:
@@ -35,7 +41,7 @@ services:
     secrets: [pg_password]
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./db:/docker-entrypoint-initdb.d:ro   
+      - dbinit:/docker-entrypoint-initdb.d:ro   
     networks: [app_net]
     deploy:
       placement: { constraints: [node.role == manager] }
@@ -46,11 +52,11 @@ services:
         reservations:
           memory: 256M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d eventsdb -h 127.0.0.1 || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U user -d eventsdb -h 127.0.0.1 -p 5432 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 60s
+      start_period: 120s
 
   redis:
     image: redis:7-alpine
