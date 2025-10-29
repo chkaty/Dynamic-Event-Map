@@ -10,7 +10,7 @@ Environment=KEEP_HOURS=168
 Environment=STOPPED_KEEP_HOURS=24
 
 Environment=DRY_RUN=false
-ExecStart=/usr/local/bin/docker-clean.sh
+ExecStart=/usr/local/bin/docker_clean.sh
 Nice=10
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7
