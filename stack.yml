@@ -17,6 +17,12 @@ volumes:
       type: none
       o: bind
       device: /root/deploy/db
+  redisdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/redisdata/redis-data
 
 secrets:
   pg_password:
@@ -67,6 +73,8 @@ services:
           --requirepass "$$PASS";
       '
     networks: [app_net]
+    volumes:
+      - redisdata:/data
     deploy:
       restart_policy: { condition: any }
       resources:
