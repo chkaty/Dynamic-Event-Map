@@ -71,7 +71,7 @@ jobs:
           username: ${{ vars.DO_SSH_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
-          source: "stack.yml,db/*"
+          source: "stack.yml,db/*,infra/*"
           target: "/root/deploy/"
 
       # ---- Deploy on droplet ----
@@ -104,11 +104,13 @@ jobs:
             fi
 
             echo "[*] Ensuring DO Volume mountpoint exists and permissions are correct..."
-            mkdir -p /mnt/pgdata/redis-data
-            chown 999:999 /mnt/pgdata/redis-data || true
-
             mkdir -p /mnt/pgdata/postgres-data
-            chown 999:999 /mnt/pgdata/postgres-data || true
+            mkdir -p /mnt/pgdata/redis-data
+
+            chown -R 999:999 /mnt/pgdata/postgres-data
+            chmod 700 /mnt/pgdata/postgres-data
+
+            chmod 777 /mnt/pgdata/redis-data
 
             echo "[*] Ensuring pg_password secret exists..."
             if ! docker secret ls | awk '{print $2}' | grep -qx 'pg_password'; then
