@@ -110,7 +110,15 @@ jobs:
             chown -R 999:999 /mnt/pgdata/postgres-data
             chmod 700 /mnt/pgdata/postgres-data
 
-            chmod 777 /mnt/pgdata/redis-data
+            echo "[*] Detect Redis UID from image..."
+            REDIS_UID=$(docker run --rm redis:7-alpine sh -lc 'id -u redis 2>/dev/null || echo 0')
+            if [ -z "$REDIS_UID" ] || ! echo "$REDIS_UID" | grep -Eq '^[0-9]+$'; then
+              REDIS_UID=1001
+            fi
+
+            echo "[*] Fix permissions for Redis data dir (uid=$REDIS_UID)..."
+            chown -R "$REDIS_UID:$REDIS_UID" /mnt/pgdata/redis-data
+            chmod 750 /mnt/pgdata/redis-data
 
             echo "[*] Ensuring pg_password secret exists..."
             if ! docker secret ls | awk '{print $2}' | grep -qx 'pg_password'; then
