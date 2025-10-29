@@ -54,20 +54,18 @@ services:
 
   redis:
     image: redis:7-alpine
-    command:
-      - sh
-      - -c
-      - >
-        redis-server
-        --appendonly yes
-        --appendfsync everysec
-        --dir /data
-        --save 900 1
-        --save 300 10
-        --save 60 10000
-        --maxmemory 200mb
-        --maxmemory-policy allkeys-lru
-        {{- if .Secrets.redis_password -}} --requirepass "$(< /run/secrets/redis_password)" {{- end -}}
+    command: >
+      sh -c '
+        PASS_FILE="/run/secrets/redis_password";
+        PASS=$$(cat "$$PASS_FILE");
+        exec redis-server \
+          --appendonly yes \
+          --appendfsync everysec \
+          --dir /data \
+          --save 900 1 --save 300 10 --save 60 10000 \
+          --maxmemory 200mb --maxmemory-policy allkeys-lru \
+          --requirepass "$$PASS";
+      '
     volumes:
       - redisdata:/data
     networks: [app_net]
