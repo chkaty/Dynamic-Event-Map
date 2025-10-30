@@ -139,6 +139,7 @@ jobs:
             echo "[*] Pulling freshly built images by SHA..."
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-api:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-client:${{ github.sha }}
+            docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-events-ingest:latest
 
             echo "[*] Deploying/Updating stack: ${{ env.STACK }}"
 
