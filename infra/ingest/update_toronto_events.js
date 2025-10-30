@@ -191,7 +191,6 @@ async function main() {
     }
   }
 
-  await client.end();
   console.log(`[pull] done. upserted=${ok}, failed=${fail}`);
   await client.query(
     `
