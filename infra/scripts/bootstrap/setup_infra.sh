@@ -120,4 +120,4 @@ echo "[*] Running first clean (one-shot)"
 systemctl start docker-clean.service || true
 sleep 2
 journalctl -u docker-clean.service -n 100 --no-pager || true
-echo "[✓] Setup finished."
+echo "[*] Setup complete."
