@@ -154,7 +154,7 @@ services:
   events_ingest:
     image: node:22-alpine
     volumes:
-      - /root/deploy/scripts/ingest:/work/scripts:ro
+      - /root/deploy/infra/scripts/ingest:/work/scripts:ro
     secrets:
       - pg_password
     environment:
