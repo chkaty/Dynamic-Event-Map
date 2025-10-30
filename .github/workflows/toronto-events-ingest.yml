@@ -1,0 +1,62 @@
+name: daily-toronto-ingest
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # every day 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  run-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and run ingest
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.DO_SSH_HOST }}
+          username: ${{ vars.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
+          script: |
+            set -euo pipefail
+
+            echo "[*] make sure service exists..."
+            if ! docker service ls --format '{{.Name}}' | grep -q '^eventmap_events_ingest$'; then
+              echo "FATAL: service eventmap_events_ingest not found. Deploy stack first."
+              docker service ls
+              exit 1
+            fi
+
+            echo "[*] run one-shot ingest..."
+            # set replicas to 1 so a task is actually created
+            docker service update --replicas 1 eventmap_events_ingest
+
+            echo "[*] wait for task to finish..."
+            # get last task id
+            TID="$(docker service ps --no-trunc --format '{{.ID}}' --filter 'desired-state=running' eventmap_events_ingest | head -n1)"
+            # give it up to ~90s
+            for i in $(seq 1 30); do
+              STATE="$(docker service ps --no-trunc --format '{{.CurrentState}}' "$TID" 2>/dev/null || true)"
+              echo "  state=$STATE"
+              case "$STATE" in
+                *"Complete"*)
+                  break
+                  ;;
+                *"Failed"*|*"Rejected"*)
+                  break
+                  ;;
+              esac
+              sleep 3
+            done
+
+            # print logs if we can
+            CID="$(docker inspect "$TID" --format '{{.Status.ContainerStatus.ContainerID}}' 2>/dev/null || true)"
+            if [ -n "$CID" ]; then
+              echo "[*] logs from container $CID:"
+              docker logs "$CID" 2>&1 || true
+            else
+              echo "[!] no container id for task $TID"
+            fi
+
+            echo "[*] scale back to 0"
+            docker service update --replicas 0 eventmap_events_ingest
+            docker service ps eventmap_events_ingest --no-trunc
