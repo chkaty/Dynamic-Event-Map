@@ -85,7 +85,7 @@ function normalizeTorontoEvents(raw) {
   const endsAt = raw.event_enddate || null;
   return {
     source: "external",
-    external_id: String(raw.id),
+    ref_id: String(raw.id),
     title: raw.short_name || "Untitled",
     description: raw.short_description || null,
     starts_at: startsAt ? new Date(startsAt).toISOString() : null,
