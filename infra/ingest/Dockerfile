@@ -7,4 +7,4 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-CMD ["node", "/app/scripts/update_toronto_events.js"]
+CMD ["node", "update_toronto_events.js"]
