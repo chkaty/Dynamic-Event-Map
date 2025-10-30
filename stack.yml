@@ -169,4 +169,8 @@ services:
       restart_policy:
         condition: none
       placement: { constraints: [node.role == manager] }
-    command: ["node", "/work/scripts/update_toronto_events.js"]
+    command: >
+      sh -c "
+        npm install pg &&
+        node /work/scripts/update_toronto_events.js
+      "
