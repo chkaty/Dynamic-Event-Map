@@ -1,4 +1,4 @@
-// api/services/torontoEvents.js
+// api/controllers/externalEventsController.js
 
 const TORONTO_BASE =
   "https://secure.toronto.ca/c3api_data/v2/DataAccess.svc/festivals_events/events";
