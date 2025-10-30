@@ -168,6 +168,5 @@ services:
       replicas: 1
       restart_policy:
         condition: none
-      placement:
-        - node.role == manager
+      placement: { constraints: [node.role == manager] }
     command: ["node", "/work/scripts/update_toronto_events.js"]
