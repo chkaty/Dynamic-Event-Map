@@ -17,8 +17,8 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
           script: |
-            docker service ls | grep events_ingest || {
-              echo "events_ingest service not found"; exit 1;
+            docker service ls | grep eventmap_events_ingest || {
+              echo "eventmap_events_ingest service not found"; exit 1;
             }
-            docker service update --force events_ingest
-            docker service ps events_ingest --no-trunc --latest
+            docker service update --force eventmap_events_ingest
+            docker service ps eventmap_events_ingest --no-trunc --latest
