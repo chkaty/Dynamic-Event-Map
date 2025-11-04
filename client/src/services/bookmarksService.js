@@ -1,14 +1,15 @@
 import { API_BASE, get, post, del } from "./apiService.js";
 export async function fetchBookmarks() {
-  return get(`/bookmarks`);
+  return post(`/bookmarks`, {});
 }
 
 export async function addBookmark(eventId) {
-  return post(`/bookmarks`, { eventId });
+  console.log('Adding bookmark for eventId:', eventId);
+  return post(`/bookmarks/add`, { eventId });
 }
 
 export async function removeBookmark(eventId) {
-  return del(`/bookmarks/${eventId}`);
+  return del(`/bookmarks/${eventId}`, {});
 }
 
 export function getCurrentUser() {

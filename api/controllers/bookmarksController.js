@@ -29,8 +29,7 @@ const getBookmarks = async (req, res) => {
 };
 
 const createBookmark = async (req, res) => {
-  const { eventId } = req.params;
-  const { userId } = req.body;
+  const { eventId, userId } = req.body;
   try {
     const uid = userId || (await ensureMockUser());
     const created = await Bookmark.create({ eventId, userId: uid });

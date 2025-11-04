@@ -13,24 +13,16 @@ CREATE TABLE IF NOT EXISTS events (
     longitude DOUBLE PRECISION,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT events_external_unique UNIQUE (source, ref_id),
-    norm_title TEXT GENERATED ALWAYS AS (
-        regexp_replace(lower(trim(title)), '\s+', ' ', 'g')
-    ) STORED,
-    event_key TEXT GENERATED ALWAYS AS (
-        CASE
-          WHEN starts_at IS NULL OR latitude IS NULL OR longitude IS NULL
-          THEN md5(gen_random_uuid()::text)
-          ELSE md5(
-            title
-            || '|' || extract(epoch from starts_at)::bigint::text
-            || '|' || coalesce(extract(epoch from ends_at)::bigint::text,'')
-            || '|' || round(latitude::numeric, 5)::text
-            || '|' || round(longitude::numeric,5)::text
-          )
-        END
-    ) STORED,
-    UNIQUE (event_key)
+    CONSTRAINT events_external_unique UNIQUE (source, ref_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_events_natural_all
+ON events (
+  lower(btrim(title)),
+  starts_at,
+  ends_at,
+  round(latitude::numeric, 5),
+  round(longitude::numeric, 5)
 );
 
 CREATE INDEX IF NOT EXISTS ix_events_starts_at  ON events(starts_at);

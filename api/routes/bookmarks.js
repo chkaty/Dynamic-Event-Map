@@ -3,10 +3,10 @@ const router = express.Router({ mergeParams: true });
 const bookmarksController = require('../controllers/bookmarksController');
 
 // GET /api/bookmarks
-router.get('/', bookmarksController.getBookmarks);
+router.post('/', bookmarksController.getBookmarks);
 
 // POST /api/bookmarks
-router.post('/', bookmarksController.createBookmark);
+router.post('/add', bookmarksController.createBookmark);
 
 // DELETE /api/bookmarks/:bookmarkId
 router.delete('/:bookmarkId', bookmarksController.deleteBookmark);
