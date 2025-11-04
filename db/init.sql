@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS events (
           WHEN starts_at IS NULL OR latitude IS NULL OR longitude IS NULL
           THEN md5(gen_random_uuid()::text)
           ELSE md5(
-            norm_title
+            title
             || '|' || extract(epoch from starts_at)::bigint::text
             || '|' || coalesce(extract(epoch from ends_at)::bigint::text,'')
             || '|' || round(latitude::numeric, 5)::text
