@@ -18,8 +18,8 @@ const getBookmarks = async (req, res) => {
     const uid = userId || (await ensureMockUser());
     const result = await Bookmark.getByUser(uid);
     const out = result.rows.map((r) => ({
-      event: r.event,
-      bookmarkedAt: r.bookmarked_at,
+      data: r.event,
+      created_at: r.bookmarked_at,
     }));
     res.json(out);
   } catch (err) {
