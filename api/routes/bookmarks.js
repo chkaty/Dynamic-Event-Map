@@ -8,7 +8,7 @@ router.post('/', bookmarksController.getBookmarks);
 // POST /api/bookmarks
 router.post('/add', bookmarksController.createBookmark);
 
-// DELETE /api/bookmarks/:bookmarkId
-router.delete('/:bookmarkId', bookmarksController.deleteBookmark);
+// DELETE /api/bookmarks/:eventId
+router.delete('/:eventId', bookmarksController.deleteBookmark);
 
 module.exports = router;
