@@ -5,7 +5,6 @@ export async function fetchBookmarks() {
 }
 
 export async function addBookmark(eventId) {
-  console.log('Adding bookmark for eventId:', eventId);
   return post(`/bookmarks/add`, { eventId });
 }
 
