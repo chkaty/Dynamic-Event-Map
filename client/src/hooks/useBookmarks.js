@@ -82,7 +82,7 @@ export function useBookmarks() {
     }));
     
     try {
-      await postBatch(payload);
+      const bookmarks = await postBatch(payload);
       // Clear queue after successful sync
       writeJSON(KEYS.QUEUE, {});
     } catch (error) {
