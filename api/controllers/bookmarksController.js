@@ -33,8 +33,9 @@ const createBookmark = async (req, res) => {
   try {
     const uid = userId || (await ensureMockUser());
     const created = await Bookmark.create({ eventId, userId: uid });
-    const id = created.rows[0].id;
-    res.json({ id });
+    const event_id = created.rows[0].event_id || eventId;
+    const user_id = created.rows[0].user_id || uid;
+    res.json({ event_id, user_id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create bookmark' });
