@@ -1,6 +1,7 @@
 import { API_BASE, get, post, del } from "./apiService.js";
 export async function fetchBookmarks() {
-  return post(`/bookmarks`, {});
+  const result = await post(`/bookmarks`, {});
+  return { items: result };
 }
 
 export async function addBookmark(eventId) {
