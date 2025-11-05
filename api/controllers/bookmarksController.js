@@ -45,14 +45,14 @@ const createBookmark = async (req, res) => {
 
 const deleteBookmark = async (req, res) => {
   const { bookmarkId } = req.params;
-  const { userId } = req.body;
+  // const { userId } = req.body;
   try {
-    const uid = userId || (await ensureMockUser());
-    // Check that the bookmark belongs to the user
-    const bookmark = await pool.query('SELECT id FROM bookmarks WHERE id = $1 AND user_id = $2', [bookmarkId, uid]);
-    if (bookmark.rows.length === 0) {
-      return res.status(404).json({ error: 'Bookmark not found or not owned by user' });
-    }
+    // const uid = userId || (await ensureMockUser());
+    // // Check that the bookmark belongs to the user
+    // const bookmark = await pool.query('SELECT id FROM bookmarks WHERE id = $1 AND user_id = $2', [bookmarkId, uid]);
+    // if (bookmark.rows.length === 0) {
+    //   return res.status(404).json({ error: 'Bookmark not found or not owned by user' });
+    // }
     const result = await Bookmark.delete({ bookmarkId });
     if (result.rowCount === 0) return res.status(404).json({ error: 'Bookmark not found' });
     res.json({ message: 'Bookmark deleted' });
