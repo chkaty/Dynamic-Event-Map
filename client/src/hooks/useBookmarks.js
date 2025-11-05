@@ -6,7 +6,7 @@ export function useBookmarks() {
   const [bookmarkedIds, setBookmarkedIds] = useState(() => new Set());
   const [items, setItems] = useState([]);        // [{ data: eventRow, created_at }]
   const [pendingIds, setPendingIds] = useState(() => new Set()); // <— NEW
-  const loadingRef = useRef(false);
+  const latestRunRef = useRef(false);
 
   const toEventData = useCallback((row) => {
     if (!row) return null;
@@ -26,27 +26,27 @@ export function useBookmarks() {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (loadingRef.current) return;
-      loadingRef.current = true;
-      try {
-        const { items: serverItems = [] } = await fetchBookmarks();
-        if (cancelled) return;
-        setItems(serverItems);
-        const ids = new Set();
-        for (const it of serverItems) {
-          const evId = it?.data?.id;
-          if (typeof evId === "number") ids.add(evId);
-        }
-        setBookmarkedIds(ids);
-      } finally {
-        loadingRef.current = false;
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+useEffect(() => {
+  let cancelled = false;
+  const runId = Symbol();            
+  latestRunRef.current = runId;      
+
+  (async () => {
+    try {
+      const { items: serverItems = [] } = await fetchBookmarks();
+      if (cancelled || latestRunRef.current !== runId) return;
+      setItems(serverItems);
+      const ids = new Set(serverItems.map(it =>
+        typeof it?.data?.id === "number" ? it.data.id :
+        typeof it?.id === "number" ? it.id : undefined
+      ).filter(n => typeof n === "number"));
+      setBookmarkedIds(ids);
+    } finally {
+    }
+  })();
+
+  return () => { cancelled = true; };
+}, []);
 
   const isBookmarked = useCallback(
     (eventId) => bookmarkedIds.has(eventId),
@@ -96,7 +96,14 @@ export function useBookmarks() {
       setPendingIds((s) => new Set(s).add(eventId));
       try {
         if (willMark) await addBookmark(eventId);
-        else await removeBookmark(eventId);
+        else {
+          let bookmarkId = items.find((it) => it?.data?.id === eventId)?.id;
+          if (bookmarkId) {
+            await removeBookmark(bookmarkId);
+          } else {
+            throw new Error("Bookmark ID not found for removal");
+          }
+        }
       } catch {
         // rollback
         setBookmarkedIds((old) => {
