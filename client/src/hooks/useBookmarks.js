@@ -37,8 +37,7 @@ useEffect(() => {
       if (cancelled || latestRunRef.current !== runId) return;
       setItems(serverItems);
       const ids = new Set(serverItems.map(it =>
-        typeof it?.data?.id === "number" ? it.data.id :
-        typeof it?.id === "number" ? it.id : undefined
+        typeof it?.data?.id === "number" ? it.data.id : undefined
       ).filter(n => typeof n === "number"));
       setBookmarkedIds(ids);
     } finally {
