@@ -71,50 +71,51 @@ useEffect(() => {
         else ns.delete(eventId);
         return ns;
       });
-
-      if (willMark) {
-        const already = items.some((it) => it?.data?.id === eventId);
-        if (!already && eventObj) {
-          const rowLike = {
-            id: eventId,
-            title: eventObj.title ?? `Event ${eventId}`,
-            description: eventObj.description ?? null,
-            latitude: eventObj.position?.lat ?? null,
-            longitude: eventObj.position?.lng ?? null,
-            data: eventObj.data ?? {},
-          };
-          setItems((old) => [
-            { data: rowLike, created_at: new Date().toISOString() },
-            ...old,
-          ]);
-        }
-      } else {
-        setItems((old) => old.filter((it) => it?.data?.id !== eventId));
-      }
-
       // mark this id as pending
       setPendingIds((s) => new Set(s).add(eventId));
       try {
-        if (willMark) await addBookmark(eventId);
-        else {
+        if (willMark){
+          const result = await addBookmark(eventId);
+          const already = items.some((it) => it?.data?.id === eventId);
+          if (!already && eventObj) {
+            const rowLike = {
+              id: eventId,
+              title: eventObj.title ?? `Event ${eventId}`,
+              description: eventObj.description ?? null,
+              latitude: eventObj.position?.lat ?? null,
+              longitude: eventObj.position?.lng ?? null,
+              data: eventObj.data ?? {},
+            };
+            setItems((old) => [
+              { data: rowLike, created_at: new Date().toISOString(), id: result.id },
+              ...old,
+            ]);
+          } else {
+            setItems((old) => {
+              return old.map((it) => {
+                if (it?.data?.id === eventId) {
+                  return { ...it, id: result.id };
+                }
+                return it;
+              });
+            });
+          }
+        } else {
           let bookmarkId = items.find((it) => it?.data?.id === eventId)?.id;
           if (bookmarkId) {
             await removeBookmark(bookmarkId);
+            setItems((old) => old.filter((it) => it?.data?.id !== eventId));
           } else {
             throw new Error("Bookmark ID not found for removal");
           }
         }
       } catch {
-        // rollback
+        // Handle errors (e.g., revert optimistic update)
         setBookmarkedIds((old) => {
           const ns = new Set(old);
           if (prev) ns.add(eventId);
           else ns.delete(eventId);
           return ns;
-        });
-        setItems((old) => {
-          if (willMark) return old.filter((it) => it?.data?.id !== eventId);
-          return old; // leaving as-is; user can refresh
         });
       } finally {
         // clear pending
