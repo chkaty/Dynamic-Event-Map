@@ -74,7 +74,7 @@ useEffect(() => {
       // mark this id as pending
       setPendingIds((s) => new Set(s).add(eventId));
       try {
-        if (willMark){
+        if (willMark) {
           const result = await addBookmark(eventId);
           const already = items.some((it) => it?.data?.id === eventId);
           if (!already && eventObj) {
