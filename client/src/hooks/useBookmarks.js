@@ -92,8 +92,8 @@ useEffect(() => {
           } else {
             setItems((old) => {
               return old.map((it) => {
-                if (it?.data?.id === eventId) {
-                  return { ...it, id: result.id };
+                if (it?.data?.id === eventId && it.id !== result.id) {
+                  return { data: it.data, created_at: it.created_at, id: result.id };
                 }
                 return it;
               });
