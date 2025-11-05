@@ -99,8 +99,10 @@ useEffect(() => {
               });
             });
           }
+          console.log("Added bookmark:", result, items);
         } else {
           let bookmarkId = items.find((it) => it?.data?.id === eventId)?.id;
+          console.log("Removing bookmark with id:", bookmarkId);
           if (bookmarkId) {
             await removeBookmark(bookmarkId);
             setItems((old) => old.filter((it) => it?.data?.id !== eventId));
