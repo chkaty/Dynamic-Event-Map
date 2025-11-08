@@ -44,15 +44,34 @@ REDIS_PORT=
 BACKEND_PORT=
 FRONTEND_PORT=
 VITE_GOOGLE_MAPS_KEY=
-```
 
-### 3. Run with Docker Compose
+# Firebase client configuration
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+```
+## 3. Enable Firebase authentication
+When running as a developer, there should be code added which allows for token verification in Firebase without an account.
+To run authentication with your service account key:
+
+Create a file "firebase-service-account.json" in /api:
+```bash
+cd /Dynamic-Event-Map/api
+touch firebase-service-account.json
+```
+In Firebase: Project Overview -> Project Settings -> Service Accounts -> Generate new private key
+Copy the service account key JSON into firebase-service-account.json.
+
+### 4. Run with Docker Compose
 ```bash
 # Start all services
 docker-compose -f docker-compose.dev.yml up --build
 ```
 
-### 4. Access the Application
+### 5. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
 - **Database**: localhost:5432
@@ -79,16 +98,34 @@ Get-Content .env | ForEach-Object {
     } 
 }
 ```
-### 3. Build Images
+or
+```bash
+set -a; source .env; set +a
+```
+### 3. Create Firebase service account secret
+```
+docker secret create firebase-service-account.json ./api/firebase-service-account.json
+```
+### 4. Build Images
 ```powershell
 # Build API image
 docker build -t dynamic-event-map-api:latest ./api
 
 # Build Client image
-docker build -f client/Dockerfile.local -t dynamic-event-map-client:latest ./client
+$Env:DOCKER_BUILDKIT=1
+docker build -f ./client/Dockerfile.local `
+  -t dynamic-event-map-client:latest `
+  --build-arg VITE_GOOGLE_MAPS_KEY=$Env:VITE_GOOGLE_MAPS_KEY `
+  --build-arg VITE_FIREBASE_API_KEY=$Env:VITE_FIREBASE_API_KEY `
+  --build-arg VITE_FIREBASE_AUTH_DOMAIN=$Env:VITE_FIREBASE_AUTH_DOMAIN `
+  --build-arg VITE_FIREBASE_PROJECT_ID=$Env:VITE_FIREBASE_PROJECT_ID `
+  --build-arg VITE_FIREBASE_STORAGE_BUCKET=$Env:VITE_FIREBASE_STORAGE_BUCKET `
+  --build-arg VITE_FIREBASE_APP_ID=$Env:VITE_FIREBASE_APP_ID `
+  --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=$Env:VITE_FIREBASE_MESSAGING_SENDER_ID `
+  client
 ```
 
-### 4. Deploy Stack with 2 API Replicas
+### 5. Deploy Stack with 2 API Replicas
 ```
 docker stack deploy -c docker-compose.swarm-local.yml dynamic-event-map
 ```
@@ -181,6 +218,14 @@ REDIS_PORT=6379
 EOF
 ```
 
+and Create a file "firebase-service-account.json" in /api:
+```bash
+cd /api
+touch firebase-service-account.json
+```
+In Firebase: Project Overview -> Project Settings -> Service Accounts -> Generate new private key
+Copy the service account key JSON into firebase-service-account.json.
+
 ### 7. Log into your registry on the droplet and pull images
 ```
 docker login ghcr.io -u <GH_USERNAME>
@@ -233,6 +278,16 @@ On your repo, add those:
   - `GHCR_PAT` (token with read:packages and write:packages)
 
   - `DO_SSH_KEY` (your private SSH key contents)
+
+  - `GOOGLE_MAPS_KEY`
+
+  - `FIREBASE_API_KEY`
+
+  - `FIREBASE_PROJECT_ID`
+
+  - `FIREBASE_APP_ID`
+
+  - `FIREBASE_MESSAGING_SENDER_ID`
 
 - Repository variables:
 

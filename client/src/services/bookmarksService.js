@@ -1,16 +1,17 @@
 import { API_BASE, get, post, del } from "./apiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
-export async function fetchComments(eventId) {
-  return get(`/events/${eventId}/comments`);
+export async function fetchBookmarks() {
+  const result = await post(`/bookmarks`, {});
+  return { items: result };
 }
 
-export async function addComment(eventId, text, userId) {
-  return post(`/events/${eventId}/comments`, { text, userId });
+export async function addBookmark(eventId) {
+  return post(`/bookmarks/${eventId}`, {});
 }
 
-export async function removeComment(eventId, commentId) {
-  return del(`/events/${eventId}/comments/${commentId}`);
+export async function removeBookmark(bookmarkId) {
+  return del(`/bookmarks/${bookmarkId}`);
 }
 
 export function getCurrentUser() {
