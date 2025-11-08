@@ -118,6 +118,7 @@ jobs:
             VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_PROJECT_ID }}.firebasestorage.app
             VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
             VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+            FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
             EOF
 
             echo "[*] Ensuring Swarm is active..."
