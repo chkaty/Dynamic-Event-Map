@@ -148,12 +148,11 @@ jobs:
               echo "redis_password already present."
             fi
 
-            echo "[*] Ensuring firebase-service-account.json secret exists..."
-            if ! docker secret ls | awk '{print $2}' | grep -qx 'firebase-service-account.json'; then
+            if ! docker secret ls --format '{{.Name}}' | grep -qx 'firebase-service-account.json'; then
               echo "Creating firebase-service-account.json secret..."
-              cat > /tmp/firebase_sa.json <<'EOF'
-                ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-              EOF
+              cat >/tmp/firebase_sa.json <<'EOF'
+${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+EOF
               docker secret create firebase-service-account.json /tmp/firebase_sa.json
               rm -f /tmp/firebase_sa.json
             else
