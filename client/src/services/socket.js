@@ -17,8 +17,6 @@ const socket = io(url, {
   autoConnect: true,
 });
 
-console.log("[socket.io] url=", url, "path=", path);
-
 export default socket;
 
 export function on(event, cb) {
