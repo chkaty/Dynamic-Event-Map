@@ -1,6 +1,9 @@
+secrets:
+  firebase-service-account.json:
+    external: true
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -44,7 +47,7 @@ services:
   api:
     image: dynamic-event-map-api:latest
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: ${BACKEND_PORT}
       DB_HOST: db
       DB_PORT: ${DB_PORT}
@@ -53,6 +56,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/firebase-service-account.json
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    secrets:
+      - source: firebase-service-account.json
+        target: firebase-service-account.json
+    depends_on:
+      - redis
+      - db
     networks: [app-network]
     deploy:
       replicas: 2
