@@ -119,9 +119,9 @@ services:
         target: firebase-service-account.json
     networks: [app_net]
     depends_on: [db, redis]
-    # API only accessible through nginx proxy - no external port
     deploy:
       replicas: 2
+      endpoint_mode: dnsrr
       update_config: { order: start-first }
       restart_policy: { condition: any }
       resources:
@@ -144,6 +144,7 @@ services:
       - "80:80"
     deploy:
       replicas: 2
+      endpoint_mode: dnsrr
       update_config: { order: start-first, parallelism: 1, delay: 5s }
       restart_policy: { condition: any, delay: 5s, max_attempts: 3 }
       resources:
