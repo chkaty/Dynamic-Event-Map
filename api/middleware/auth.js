@@ -16,12 +16,14 @@ const firebaseAuth = async (req, res, next) => {
 
     const idToken = match[1];
     const decoded = await admin.auth().verifyIdToken(idToken);
+    console.log('firebaseAuth decoded token for uid:', decoded.uid);
 
     // Upsert user by firebase uid (store in google_id for compatibility)
     let user = await User.findOne({ where: { google_id: decoded.uid } });
     if (!user) {
       user = await User.findOne({ where: { email: decoded.email } });
     }
+    console.log('firebaseAuth found user:', user ? user.id : 'none');
     if (!user) {
       user = await User.create({
         google_id: decoded.uid,
@@ -29,10 +31,12 @@ const firebaseAuth = async (req, res, next) => {
         username: decoded.name || decoded.email.split('@')[0],
         picture: decoded.picture || null
       });
+      console.log('firebaseAuth created new user:', user.id);
     } else {
       if (!user.google_id) user.google_id = decoded.uid;
       user.lastLogin = new Date();
       await user.save();
+      console.log('firebaseAuth updated user lastLogin:', user.id);
     }
 
     req.user = user;

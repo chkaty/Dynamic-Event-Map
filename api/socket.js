@@ -4,7 +4,7 @@ function init(server, opts = {}) {
   const { Server } = require("socket.io");
   io = new Server(server, {
     cors: {
-      origin: opts.origin || `http://localhost:${process.env.FRONTEND_PORT || 3000}`,
+      origin: opts.origin || (process.env.FRONTEND_PORT ? `http://localhost:${process.env.FRONTEND_PORT}` : 'http://localhost'),
       methods: ["GET", "POST"],
     },
   });
