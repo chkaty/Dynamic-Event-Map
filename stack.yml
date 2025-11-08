@@ -29,7 +29,7 @@ secrets:
     external: true
   redis_password:
     external: true
-  firebase-service-account.json:
+  firebase_service_account.json:
     external: true
 
 services:
@@ -117,8 +117,8 @@ services:
     secrets:
       - pg_password
       - redis_password
-      - source: firebase-service-account.json
-        target: firebase-service-account.json
+      - source: firebase_service_account.json
+        target: firebase_service_account.json
     networks: [app_net]
     depends_on: [db, redis]
     # API only accessible through nginx proxy - no external port

@@ -148,17 +148,14 @@ jobs:
               echo "redis_password already present."
             fi
 
-            NAME="firebase-service-account.json"
-            TMP="/tmp/firebase_sa.json"
+            echo "[*] Ensuring firebase_service_account.json secret exists..."
+            docker secret rm firebase-service-account.json || true
+            cat > /tmp/firebase_sa.json <<'EOF'
+              ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+            EOF
 
-            if ! docker secret ls --format '{{.Name}}' | grep -qx "$NAME"; then
-              printf '%s' ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }} > "$TMP"
-              docker secret create "$NAME" "$TMP"
-              rm -f "$TMP"
-              echo "Created secret: $NAME"
-            else
-              echo "Secret already exists: $NAME"
-            fi
+            docker secret create firebase-service-account.json /tmp/firebase_sa.json
+            rm -f /tmp/firebase_sa.json
 
             echo "[*] Pulling freshly built images by SHA..."
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-api:${{ github.sha }}
