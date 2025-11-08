@@ -14,6 +14,8 @@ const { url, path } = socketTarget(API_BASE, window.location.origin);
 
 const socket = io(url, {
   path,
+  transports: ["websocket"],
+  withCredentials: false,
   autoConnect: true,
 });
 
