@@ -102,7 +102,7 @@ or
 ```bash
 set -a; source .env; set +a
 ```
-### 3. Create Firebase service account secrete
+### 3. Create Firebase service account secret
 ```
 docker secret create firebase-service-account.json ./api/firebase-service-account.json
 ```
