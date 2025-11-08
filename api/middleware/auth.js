@@ -3,7 +3,10 @@ const User = require('../models/user');
 
 const firebaseAuth = async (req, res, next) => {
   // Create local mock user in development without a token
+  console.log('firebaseAuth invoked');
   if (process.env.NODE_ENV !== 'production' && !process.env.FIREBASE_SERVICE_ACCOUNT) {
+    console.log('firebaseAuth using mock dev user');
+    console.log(process.env.FIREBASE_SERVICE_ACCOUNT === undefined ? 'FIREBASE_SERVICE_ACCOUNT is undefined' : 'development mode with service account');
     req.firebase = { uid: 'MOCK_DEV_UID', email: 'dev@example.com' };
     req.user = { id: 'mock-user', google_id: 'MOCK_DEV_UID', username: 'Developer' };
     return next();
