@@ -140,8 +140,6 @@ services:
     image: ghcr.io/shang8024/dynamic-event-map-client:latest
     networks: [app_net]
     depends_on: [api]
-    ports:
-      - "80:80"
     deploy:
       replicas: 2
       endpoint_mode: dnsrr
