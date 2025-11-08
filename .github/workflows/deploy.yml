@@ -149,18 +149,6 @@ jobs:
               echo "redis_password already present."
             fi
 
-            echo "[*] Ensuring firebase-service-account.json secret exists..."
-            if docker secret ls | awk '{print $2}' | grep -qx 'firebase-service-account.json'; then
-              docker secret rm firebase-service-account.json
-              echo "firebase-service-account.json removed."
-            fi
-            cat > /tmp/firebase_sa.json <<'EOF'
-              ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-            EOF
-
-            docker secret create firebase-service-account.json /tmp/firebase_sa.json
-            rm -f /tmp/firebase_sa.json
-
             echo "[*] Pulling freshly built images by SHA..."
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-api:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-client:${{ github.sha }}
