@@ -1,4 +1,3 @@
-const { number } = require('yargs');
 const Bookmark = require('../models/bookmarkModel');
 
 const getBookmarks = async (req, res) => {
