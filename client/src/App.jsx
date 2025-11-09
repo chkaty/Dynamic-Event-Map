@@ -4,9 +4,8 @@ import "./App.css";
 import BookmarksPage from "./feature/bookmarks/EventBookmarks.jsx";
 import { LoadScript } from "@react-google-maps/api";
 import EventMap from "./feature/events/EventMap.jsx";
-import { AuthProvider } from "./contexts/AuthContext.jsx";
+import { useAuth, AuthProvider } from "./contexts/AuthContext.jsx";
 import Navbar from "./components/Navbar.jsx";
-import { useAuth } from "./hooks/useAuth.jsx";
 
 function HomePage() {
   return (
