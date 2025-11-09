@@ -21,7 +21,7 @@ function HomePage() {
 
 function AuthorizedRoute({ children }) {
   // Placeholder for actual authorization logic
-  const [user] = useAuth();
+  const { user } = useAuth();
   if (!user) {
     return (
       <div className="flex h-screen flex-col">
