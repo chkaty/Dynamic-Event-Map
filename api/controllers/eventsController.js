@@ -120,7 +120,7 @@ const updateEvent = async (req, res) => {
   const rawEnds = req.body.ends_at;
   if (!req.user)
     return res.status(401).json({ error: "Authentication required" });
-  if (!title || !description )
+  if (!title || !description)
     return res.status(400).json({ error: "Missing required fields" });
   try {
     const found = await Event.getById(id);
