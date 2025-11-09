@@ -58,11 +58,7 @@ const createEvent = async (req, res) => {
 
   const starts_at =
     typeof rawStarts === "string" ? new Date(rawStarts) : rawStarts;
-  const ends_at = rawEnds
-    ? typeof rawEnds === "string"
-      ? new Date(rawEnds)
-      : rawEnds
-    : null;
+  const ends_at = typeof rawEnds === "string" ? new Date(rawEnds) : rawEnds;
 
   try {
     const result = await Event.create({
