@@ -26,6 +26,7 @@ export default function EventInfo({
     typeof event.position.lng === "number"
   );
   // Prefer Street View image (gives an actual photographic view when available).
+  const img = event.image?.url ?? event.data?.image?.url ?? null;
   const googleStreetView =
     hasPosition && API_KEY
       ? `https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${event.position.lat},${event.position.lng}&fov=90&heading=235&pitch=10&key=${API_KEY}`
@@ -52,7 +53,7 @@ export default function EventInfo({
       <div className="bg-base-100 rounded-md shadow-sm">
         <div className="bg-base-100 relative h-40 w-full overflow-hidden rounded-md">
           <img
-            src={event.img || googleStreetView || `https://picsum.photos/seed/${event.id}/800/400`}
+            src={img || googleStreetView || `https://picsum.photos/seed/${event.id}/800/400`}
             alt={event.title}
             className="h-56 w-full object-cover object-center"
           />

@@ -44,6 +44,7 @@ function getTorontoEventsURL({ from, to }) {
     "event_startdate",
     "event_enddate",
     "calendar_date",
+    "category",
     "calendar_date_group"
   ].join(","),
   "$orderby=calendar_date_group,featured_event desc,calendar_date",
