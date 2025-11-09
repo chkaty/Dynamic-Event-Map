@@ -26,7 +26,7 @@ export function useBookmarks() {
       position,
       _row: row,
     };
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
