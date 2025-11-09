@@ -3,8 +3,8 @@ export const API_BASE = `${API_BASE_URL}/api`;
 
 export async function get(url) {
   const headers = {};
-  const token = localStorage.getItem('idToken');
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const token = localStorage.getItem("idToken");
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${url}`, { headers });
   if (!res.ok) {
     let errorMessage = `Failed to fetch ${url}: ${res.status}`;
@@ -21,8 +21,8 @@ export async function get(url) {
 
 export async function post(url, data) {
   const headers = { "Content-Type": "application/json" };
-  const token = localStorage.getItem('idToken');
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const token = localStorage.getItem("idToken");
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${url}`, {
     method: "POST",
     headers,
@@ -43,8 +43,8 @@ export async function post(url, data) {
 
 export async function del(url) {
   const headers = {};
-  const token = localStorage.getItem('idToken');
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const token = localStorage.getItem("idToken");
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${url}`, {
     method: "DELETE",
     headers,
@@ -64,8 +64,8 @@ export async function del(url) {
 
 export async function put(url, data) {
   const headers = { "Content-Type": "application/json" };
-  const token = localStorage.getItem('idToken');
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const token = localStorage.getItem("idToken");
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${url}`, {
     method: "PUT",
     headers,

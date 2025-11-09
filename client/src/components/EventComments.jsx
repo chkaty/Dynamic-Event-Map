@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  fetchComments,
-  addComment,
-  removeComment,
-} from "../services/commentsService";
+import { fetchComments, addComment, removeComment } from "../services/commentsService";
 import socket from "../services/socket";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -29,7 +25,7 @@ export default function EventComments({ eventId }) {
 
   const handleAdd = async (e) => {
     if (!user) {
-      setError('You must be logged in to post comments');
+      setError("You must be logged in to post comments");
       return;
     }
     e?.preventDefault();
@@ -114,11 +110,13 @@ export default function EventComments({ eventId }) {
     <div className="mt-3">
       <form onSubmit={handleAdd} className="mb-2">
         {error && <div className="text-error mb-2 text-xs">{error}</div>}
-        <div className="flex gap-2 items-stretch">
+        <div className="flex items-stretch gap-2">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={user ? `Comment as ${user.displayName || user.email}...` : 'Please login to comment'}
+            placeholder={
+              user ? `Comment as ${user.displayName || user.email}...` : "Please login to comment"
+            }
             className="textarea textarea-bordered min-h-[72px] flex-1"
             disabled={!user}
           />
@@ -161,18 +159,18 @@ export default function EventComments({ eventId }) {
                         title="Delete comment"
                         aria-label="Delete comment"
                       >
-                      <svg
-                        width="14"
-                        height="14"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 16 16"
-                      >
-                        <path
-                          fill="currentColor"
-                          d="m4.818 4.111l-.707.707a.5.5 0 0 0 0 .707L6.586 8L4.11 10.475a.5.5 0 0 0 0 .707l.707.707a.5.5 0 0 0 .707 0L8 9.414l2.475 2.475a.5.5 0 0 0 .707 0l.707-.707a.5.5 0 0 0 0-.707L9.414 8l2.475-2.475a.5.5 0 0 0 0-.707l-.707-.707a.5.5 0 0 0-.707 0L8 6.586L5.525 4.11a.5.5 0 0 0-.707 0"
-                        />
-                      </svg>
-                    </button>
+                        <svg
+                          width="14"
+                          height="14"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 16 16"
+                        >
+                          <path
+                            fill="currentColor"
+                            d="m4.818 4.111l-.707.707a.5.5 0 0 0 0 .707L6.586 8L4.11 10.475a.5.5 0 0 0 0 .707l.707.707a.5.5 0 0 0 .707 0L8 9.414l2.475 2.475a.5.5 0 0 0 .707 0l.707-.707a.5.5 0 0 0 0-.707L9.414 8l2.475-2.475a.5.5 0 0 0 0-.707l-.707-.707a.5.5 0 0 0-.707 0L8 6.586L5.525 4.11a.5.5 0 0 0-.707 0"
+                          />
+                        </svg>
+                      </button>
                     )}
                   </div>
                 </div>

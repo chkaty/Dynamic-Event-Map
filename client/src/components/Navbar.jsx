@@ -24,7 +24,7 @@ export default function Navbar() {
       <div className="flex-none">
         {user ? (
           <div>
-            <ul className="menu menu-horizontal relative px-1 z-50">
+            <ul className="menu menu-horizontal relative z-50 px-1">
               <li>
                 <details className="relative">
                   <summary className="flex cursor-pointer items-center gap-2">
