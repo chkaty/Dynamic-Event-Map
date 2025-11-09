@@ -50,7 +50,7 @@ export default function EventInfo({
   return (
     <div className="bg-base-200 border-base-300 flex h-full w-full flex-col border-l p-4">
       <div className="bg-base-100 rounded-md shadow-sm">
-        <div className="bg-base-100 relative w-full h-40 overflow-hidden rounded-md">
+        <div className="bg-base-100 relative h-40 w-full overflow-hidden rounded-md">
           <img
             src={googleStreetView || `https://picsum.photos/seed/${event.id}/800/400`}
             alt={event.title}
