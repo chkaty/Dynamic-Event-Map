@@ -1,5 +1,4 @@
 // api/controllers/externalEventsController.js
-const Event = require("../models/eventModel");
 
 function categorizeEventByKeyword(event) {
   const text = `${event.title} ${event.description || ""}`.toLowerCase();
