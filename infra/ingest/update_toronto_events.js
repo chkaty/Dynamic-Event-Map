@@ -81,6 +81,8 @@ function normalizeTorontoEvents(raw) {
     };
   }
 
+  const category = raw.category || "Other";
+
   const startsAt = raw.event_startdate || raw.calendar_date || null;
   const endsAt = raw.event_enddate || null;
   return {
@@ -91,6 +93,7 @@ function normalizeTorontoEvents(raw) {
     starts_at: startsAt ? new Date(startsAt).toISOString() : null,
     ends_at: endsAt ? new Date(endsAt).toISOString() : null,
     latitude: lat,
+    category: category,
     longitude: lng,
     location_name: loc ? loc.location_name : null,
     location_address: loc ? loc.location_address : null,
@@ -160,9 +163,10 @@ async function main() {
         $8::double precision,-- latitude
         $9::double precision,-- longitude
         NULLIF($10,'')::text,-- location_name
-        NULLIF($11,'')::text -- location_address
+        NULLIF($11,'')::text,-- location_address
+        NULLIF($12,'')::text -- category
       )
-    ) AS v(title, source, ref_id, description, data, starts_at, ends_at, latitude, longitude, location_name, location_address)
+    ) AS v(title, source, ref_id, description, data, starts_at, ends_at, latitude, longitude, location_name, location_address, category)
     ON (
       lower(btrim(e.title)) = lower(btrim(v.title))
       AND e.starts_at IS NOT DISTINCT FROM v.starts_at
@@ -182,12 +186,13 @@ async function main() {
         longitude        = v.longitude,
         location_name    = v.location_name,
         location_address = v.location_address,
-        updated_at       = now()
+        updated_at       = now(),
+        category         = v.category
     WHEN NOT MATCHED THEN
       INSERT (title, source, ref_id, description, data, starts_at, ends_at,
-              latitude, longitude, location_name, location_address, updated_at, user_id)
+              latitude, longitude, location_name, location_address, updated_at, user_id, category)
       VALUES (v.title, v.source, v.ref_id, v.description, v.data, v.starts_at, v.ends_at,
-              v.latitude, v.longitude, v.location_name, v.location_address, now(), 1);
+              v.latitude, v.longitude, v.location_name, v.location_address, now(), 1, v.category);
     `;
 
   let ok = 0,
@@ -206,6 +211,7 @@ async function main() {
         ev.longitude,
         ev.location_name,
         ev.location_address,
+        ev.category,
       ]);
       ok++;
     } catch (e) {
