@@ -185,9 +185,9 @@ async function main() {
         updated_at       = now()
     WHEN NOT MATCHED THEN
       INSERT (title, source, ref_id, description, data, starts_at, ends_at,
-              latitude, longitude, location_name, location_address, updated_at)
+              latitude, longitude, location_name, location_address, updated_at, user_id)
       VALUES (v.title, v.source, v.ref_id, v.description, v.data, v.starts_at, v.ends_at,
-              v.latitude, v.longitude, v.location_name, v.location_address, now());
+              v.latitude, v.longitude, v.location_name, v.location_address, now(), 1);
     `;
 
   let ok = 0,
