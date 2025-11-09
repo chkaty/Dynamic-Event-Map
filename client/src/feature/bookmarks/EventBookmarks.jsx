@@ -1,9 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { useBookmarks } from "../../hooks";
 import Navbar from "../../components/Navbar.jsx";
 
 const bookmarkListItem = (id, eventData, bookmarkInfo, toggle, pending) => {
+  if (!eventData) {
+    return null;
+  }
+  const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+  const hasPosition = eventData && eventData.position && typeof eventData.position.lat === "number" && typeof eventData.position.lng === "number";
   const googleStreetView =
     hasPosition && API_KEY
       ? `https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${eventData.position.lat},${eventData.position.lng}&fov=90&heading=235&pitch=10&key=${API_KEY}`

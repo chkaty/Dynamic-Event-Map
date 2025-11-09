@@ -6,6 +6,7 @@ import { LoadScript } from "@react-google-maps/api";
 import EventMap from "./feature/events/EventMap.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import Navbar from "./components/Navbar.jsx";
+import { useAuth } from "./hooks/useAuth.jsx";
 
 function HomePage() {
   return (
@@ -19,6 +20,22 @@ function HomePage() {
   );
 }
 
+function AuthorizedRoute({ children }) {
+  // Placeholder for actual authorization logic
+  const [user] = useAuth();
+  if (!user) {
+    return (
+      <div className="flex h-screen flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-center text-lg">Please log in to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+  return children;
+}
+
 export default function App() {
   const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
@@ -27,7 +44,7 @@ export default function App() {
       <LoadScript googleMapsApiKey={API_KEY} libraries={["places"]}>
         <Router>
           <Routes>
-            <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/bookmarks" element={<AuthorizedRoute><BookmarksPage /></AuthorizedRoute>} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </Router>
