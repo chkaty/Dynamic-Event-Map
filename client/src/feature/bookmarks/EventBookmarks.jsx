@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useBookmarks } from "../../hooks";
+import Navbar from "../../components/Navbar.jsx";
 
 const bookmarkListItem = (id, eventData, bookmarkInfo, toggle, pending) => {
   return (
@@ -68,18 +69,9 @@ export default function BookmarksPage() {
   const bookmarkedEvents = listBookmarkedEvents();
 
   return (
-    <div className="flex h-screen flex-col px-10 py-2">
-      {/* Header Section */}
-      <div className="flex shrink-0 items-center justify-between">
-        <div className="flex items-center">
-          <img src="/logo.png" alt="Dynamic Event Map Logo" className="mt-2" width={50} height={50} />
-          <h1 className="ml-2 text-2xl font-bold">My Bookmarks</h1>
-        </div>
-        <nav className="flex gap-4">
-          <Link to="/" className="btn btn-ghost">Back to Map</Link>
-        </nav>
-      </div>
-
+    <div className="flex h-screen flex-col">
+      <Navbar />
+      
       {/* Bookmarks Content */}
       <div className="flex-1 p-4">
         <div className="card bg-base-100 shadow-xl">
