@@ -1,5 +1,5 @@
 // src/hooks/useBookmarks.js
-import { useState, useEffect, useRef, useCallback, useMemo, act } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { fetchBookmarks, addBookmark, removeBookmark, fetchTodaysBookmarks } from "../services/bookmarksService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useNotifications, isDismissedToday } from "../contexts/NotificationContext.jsx";
