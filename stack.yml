@@ -82,21 +82,15 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.${DOMAIN}`)"
-        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-        - "traefik.http.routers.traefik-dashboard.tls.certresolver=le"
-        - "traefik.http.routers.traefik-dashboard.service=api@internal"
-        
-        # WWW redirect middleware
-        - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https?://${DOMAIN}/(.*)"
-        - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://www.$${DOMAIN}/$$1"
-        - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
-        
-        # Router for non-www to www redirect
-        - "traefik.http.routers.to-www.rule=Host(`${DOMAIN}`)"
-        - "traefik.http.routers.to-www.entrypoints=websecure"
-        - "traefik.http.routers.to-www.tls.certresolver=le"
-        - "traefik.http.routers.to-www.middlewares=www-redirect"
+        - traefik.http.middlewares.www-redirect.redirectregex.regex=^https?://(${DOMAIN})(/.*)?$
+        - traefik.http.middlewares.www-redirect.redirectregex.replacement=https://www.${DOMAIN}$$2
+        - traefik.http.middlewares.www-redirect.redirectregex.permanent=true
+
+        # Router that catches the bare domain and applies the redirect
+        - traefik.http.routers.to-www.rule=Host(`${DOMAIN}`)
+        - traefik.http.routers.to-www.entrypoints=websecure
+        - traefik.http.routers.to-www.tls.certresolver=le
+        - traefik.http.routers.to-www.middlewares=www-redirect
   db:
     image: postgres:16-alpine
     environment:
@@ -197,7 +191,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=eventmap_proxy"
-        - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.rule=Host(`www.${DOMAIN}`) && PathPrefix(`/api`)"
         - "traefik.http.routers.api.entrypoints=websecure"
         - "traefik.http.routers.api.tls.certresolver=le"
         - "traefik.http.routers.api.priority=10"
