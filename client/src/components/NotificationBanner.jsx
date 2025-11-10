@@ -67,7 +67,26 @@ function Banner({ n, onClose, autoCloseMs = 0 }) {
             <a
               className="rounded-md bg-slate-700 px-3 py-1 text-sm text-white hover:bg-slate-800"
               href={n.action.href}
-              onClick={n.action.onClick}
+              role={!n.action.href ? "button" : undefined}
+              aria-label={n.action.ariaLabel || undefined}
+              tabIndex={0}
+              onClick={e => {
+                if (typeof n.action.onClick === "function") {
+                  n.action.onClick(e);
+                }
+                // If no href, prevent default to act as a button
+                if (!n.action.href) {
+                  e.preventDefault();
+                }
+              }}
+              onKeyDown={e => {
+                if (!n.action.href && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  if (typeof n.action.onClick === "function") {
+                    n.action.onClick(e);
+                  }
+                }
+              }}
             >
               {n.action.label}
             </a>
