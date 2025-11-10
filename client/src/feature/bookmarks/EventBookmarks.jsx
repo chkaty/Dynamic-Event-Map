@@ -209,7 +209,6 @@ export default function BookmarksPage() {
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState("bookmarked-desc");
   const filteredSorted = useMemo(() => {
-    const now = new Date();
 
     // Filter by search & hideExpired
     const matches = bookmarkedEvents.filter(({ eventData }) => {
