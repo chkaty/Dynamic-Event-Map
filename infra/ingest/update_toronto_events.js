@@ -234,6 +234,21 @@ async function main() {
   });
   await client.connect();
 
+  const redisPass =
+    readSecret("/run/secrets/redis_password") ||
+    process.env.REDISPASSWORD ||
+    process.env.REDIS_PASSWORD ||
+    undefined;
+
+  const redisClient = redis.createClient({
+    socket: {
+      host: process.env.REDIS_HOST || "127.0.0.1",
+      port: Number(process.env.REDIS_PORT || 6379),
+    },
+    password: redisPass,
+  });
+  await redisClient.connect();
+
   const mergeSQL = `
     MERGE INTO events e
     USING (
@@ -315,7 +330,11 @@ async function main() {
         WHERE b.event_id = e.id
       );
   `);
+  // cleanup all things in redis
+  await redisClient.flushAll();
+  console.log("[pull] cleaned up old events and redis cache.");
   await client.end();
+  await redisClient.quit();
   console.log("[pull] done.");
 }
 
