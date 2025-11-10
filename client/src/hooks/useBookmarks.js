@@ -1,8 +1,8 @@
 // src/hooks/useBookmarks.js
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { fetchBookmarks, addBookmark, removeBookmark } from "../services/bookmarksService.js";
+import { useState, useEffect, useRef, useCallback, useMemo, act } from "react";
+import { fetchBookmarks, addBookmark, removeBookmark, fetchTodaysBookmarks } from "../services/bookmarksService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { useNotifications } from "../contexts/NotificationContext.jsx";
+import { useNotifications, isDismissedToday } from "../contexts/NotificationContext.jsx";
 
 export function useBookmarks() {
   const [bookmarkedIds, setBookmarkedIds] = useState(() => new Set());
@@ -53,6 +53,31 @@ export function useBookmarks() {
         setBookmarkedIds(ids);
       } catch {
         push({ type: "error", message: "Failed to load bookmarks", autoCloseMs: 5000 });
+      }
+    })();
+    (async () => {
+      try {
+        // if currently is '/bookmarks', skip notification
+        if (window.location.pathname === "/bookmarks") return;
+        // if dimissed already, skip
+        if (isDismissedToday("todays-bookmarks")) return;
+        const todays = await fetchTodaysBookmarks();
+        if (cancelled || latestRunRef.current !== runId) return;
+        console.log("Today's bookmarked events:", todays);
+        let msg = "";//
+        // push notification if there are any
+        const totalCount = (todays[0]?.total ?? 0) + (todays[1]?.total ?? 0);
+        if (totalCount > 0) {
+          msg = `You have ${todays[0]?.total ?? 0} bookmarked event starting today and ${todays[1]?.total ?? 0} ending today.`;
+          push({ type: "info", message: msg, autoCloseMs: 10000,
+            stickyKey: "todays-bookmarks",
+            actions: [{
+            label: "View",
+            onClick: () => {},
+            href: "/bookmarks",
+          }]});
+        }
+      } catch {
       }
     })();
 

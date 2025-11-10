@@ -34,7 +34,7 @@ function todayStamp() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-function isDismissedToday(key) {
+export function isDismissedToday(key) {
   try {
     const raw = localStorage.getItem(`notif_dismiss_${key}`);
     if (!raw) return false;
