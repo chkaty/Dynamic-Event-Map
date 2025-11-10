@@ -16,7 +16,6 @@ export default function EventInfo({
 }) {
   const { isBookmarked, isPending, toggle } = useBookmarks();
   const { user } = useAuth();
-  const { push } = useNotifications();
 
   if (!event) return null;
 
