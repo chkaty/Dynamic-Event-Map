@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useNotifications } from "../contexts/NotificationContext.jsx";
 
 const toneCls = {
