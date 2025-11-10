@@ -2,6 +2,7 @@ import React from "react";
 import { useBookmarks } from "../hooks";
 import EventComments from "./EventComments.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useNotifications } from "../contexts/NotificationContext.jsx";
 
 export default function EventInfo({
   event,
@@ -15,6 +16,7 @@ export default function EventInfo({
 }) {
   const { isBookmarked, isPending, toggle } = useBookmarks();
   const { user } = useAuth();
+  const { push } = useNotifications();
 
   if (!event) return null;
 

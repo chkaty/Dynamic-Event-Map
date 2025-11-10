@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchComments, addComment, removeComment } from "../services/commentsService";
 import socket from "../services/socket";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useNotifications } from "../contexts/NotificationContext.jsx";
 
 export default function EventComments({ eventId }) {
   const [comments, setComments] = useState([]);
@@ -43,9 +44,11 @@ export default function EventComments({ eventId }) {
         return [created, ...prev];
       });
       setText("");
+      push({ type: "success", message: "Comment posted successfully", autoCloseMs: 2000 });
     } catch (err) {
       console.warn("post failed", err);
       setError(err.message || "Failed to post comment");
+      push({ type: "error", message: err.message || "Failed to post comment", autoCloseMs: 5000 });
     } finally {
       setLoading(false);
     }
@@ -56,9 +59,11 @@ export default function EventComments({ eventId }) {
     try {
       await removeComment(eventId, id);
       setComments((prev) => prev.filter((c) => c.id !== id));
+      push({ type: "success", message: "Comment deleted successfully", autoCloseMs: 2000 });
     } catch (err) {
       console.warn("delete failed", err);
       setError(err.message || "Failed to delete comment");
+      push({ type: "error", message: err.message || "Failed to delete comment", autoCloseMs: 5000 });
     } finally {
       setLoading(false);
     }

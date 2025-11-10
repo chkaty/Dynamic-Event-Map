@@ -77,42 +77,34 @@ export default function BookmarksPage() {
   const bookmarkedEvents = listBookmarkedEvents();
 
   return (
-    <div className="flex h-screen flex-col">
-      <Navbar />
-
-      {/* Bookmarks Content */}
-      <div className="flex-1 p-4">
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title">Bookmarked Events</h2>
-            <p>Your saved events will appear here.</p>
-
-            {/* Display bookmarked events */}
-            <div className="mt-4 grid gap-4">
-              {bookmarkedEvents.length === 0 ? (
-                <div className="alert alert-info">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="h-6 w-6 shrink-0 stroke-current"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <span>No bookmarks yet. Start exploring and bookmark events you like!</span>
-                </div>
-              ) : (
-                bookmarkedEvents.map(({ id, eventData, bookmarkInfo }) =>
-                  bookmarkListItem(id, eventData, bookmarkInfo, toggle, isPending(id))
-                )
-              )}
+    <div className="card bg-base-100 shadow-xl">
+      <div className="card-body">
+        <h2 className="card-title">Bookmarked Events</h2>
+        <p>Your saved events will appear here.</p>
+        {/* Display bookmarked events */}
+        <div className="mt-4 grid gap-4">
+          {bookmarkedEvents.length === 0 ? (
+            <div className="alert alert-info">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="h-6 w-6 shrink-0 stroke-current"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span>No bookmarks yet. Start exploring and bookmark events you like!</span>
             </div>
-          </div>
+          ) : (
+            bookmarkedEvents.map(({ id, eventData, bookmarkInfo }) =>
+              bookmarkListItem(id, eventData, bookmarkInfo, toggle, isPending(id))
+            )
+          )}
         </div>
       </div>
     </div>
