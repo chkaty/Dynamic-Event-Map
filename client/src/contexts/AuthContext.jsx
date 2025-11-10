@@ -47,7 +47,7 @@ const addUserToBackend = async (user, token) => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { push } = useNotifications?.() || { push: () => {} };
+  const { push } = useNotifications();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
