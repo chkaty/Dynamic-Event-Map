@@ -98,7 +98,7 @@ services:
       - dbinit:/docker-entrypoint-initdb.d:ro   
     networks: [internal]
     deploy:
-      placement: { constraints: [node.role == worker] }
+      placement: { constraints: [node.role == manager] }
       restart_policy: { condition: any, delay: 5s, max_attempts: 3 }
       resources:
         limits:
@@ -136,7 +136,7 @@ services:
           memory: 256M
         reservations:
           memory: 64M
-      placement: { constraints: [node.role == worker] }
+      placement: { constraints: [node.role == manager] }
     healthcheck:
       test:
       - CMD-SHELL
