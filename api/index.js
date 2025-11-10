@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const profilesRoutes = require("./routes/profiles");
 
 require("dotenv").config();
+app.set('trust proxy', 1);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -21,11 +22,16 @@ const corsOptions = {
     const isProduction = process.env.NODE_ENV === "production";
 
     if (isProduction) {
-      // In production: allow same-origin requests and configured allowed origins
-      const allowedOrigins = [
-        process.env.ALLOWED_ORIGINS, // From environment variable
+      // In production: allow same-origin requests and configured allowed
+      // origins split by comma from environment variable
+      const originList = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : [];
+      const allowedOrigins = Array.from(new Set([
+        ...originList,
         "http://localhost", // Allow localhost for testing
-      ].filter(Boolean); // Remove any undefined values
+      ].filter(Boolean))); // Remove any undefined values
+      console.log("CORS allowed origins:", allowedOrigins);
 
       // Allow same-origin requests (no origin header) OR requests from allowed origins
       if (!origin || allowedOrigins.includes(origin)) {
