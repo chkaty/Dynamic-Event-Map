@@ -177,7 +177,7 @@ export default function EventMap() {
     const withinTime = (ev) => {
       if (!ev.ends_at) return true;
       const end = new Date(ev.ends_at).getTime();
-      if (filterTime === "all") return true;
+      if (filterTime === "all") return end >= now;
       if (filterTime === "24h") return end >= now && end <= now + 24 * 3600 * 1000;
       if (filterTime === "7d") return end >= now && end <= now + 7 * 24 * 3600 * 1000;
       if (filterTime === "30d") return end >= now && end <= now + 30 * 24 * 3600 * 1000;
