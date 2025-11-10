@@ -15,7 +15,7 @@ export async function removeBookmark(bookmarkId) {
 }
 
 export async function fetchTodaysBookmarks() {
-  const result = await get(`/bookmarks/today`, {});
+  const result = await get(`/bookmarks/today`);
   return result;
 }
 
