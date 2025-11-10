@@ -1,9 +1,6 @@
 version: "3.9"
 
 networks:
-  app_net:
-    driver: overlay
-    attachable: true
   proxy:
     driver: overlay
     external: false
@@ -208,7 +205,7 @@ services:
       restart_policy: { condition: any, delay: 5s, max_attempts: 3 }
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.client.rule=Host(`${DOMAIN}`)
+        - "traefik.http.routers.client.rule=Host(`${DOMAIN}`)"
         - "traefik.http.routers.client.entrypoints=websecure"
         - "traefik.http.routers.client.tls.certresolver=le"
         - "traefik.http.routers.client.priority=5"
