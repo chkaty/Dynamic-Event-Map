@@ -1,7 +1,20 @@
-import React, { useState, useCallback, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef, useLayoutEffect } from "react";
 import { useBookmarks } from "../../hooks";
-import Navbar from "../../components/Navbar.jsx";
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+
+function status(eventData) {
+  const now = new Date();
+  const starts = eventData._row?.starts_at ? new Date(eventData._row.starts_at) : null;
+  const ends = eventData._row?.ends_at ? new Date(eventData._row.ends_at) : null;
+  let status = null;
+  if (ends && ends < now) status = "Expired";
+  else if (starts && starts <= now && (!ends || ends >= now)) status = "In progress";
+  return status;
+}
+
+function normalize(s) {
+  return (s || "").toString().toLowerCase();
+}
 
 function Description({ text, valid = true }) {
   const pRef = useRef(null);
@@ -57,13 +70,8 @@ const BookmarkListItem = ({id, eventData, bookmarkInfo, toggle, pending}) => {
     hasPosition && API_KEY
       ? `https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${eventData.position.lat},${eventData.position.lng}&fov=90&heading=235&pitch=10&key=${API_KEY}`
       : null;
-  const now = new Date();
-  const starts = eventData._row?.starts_at ? new Date(eventData._row.starts_at) : null;
-  const ends = eventData._row?.ends_at ? new Date(eventData._row.ends_at) : null;
-  let status = null;
-  if (ends && ends < now) status = "Expired";
-  else if (starts && starts <= now && (!ends || ends >= now)) status = "In progress";
-  const isExpired = status === "Expired";
+  const eventStatus = status(eventData);
+  const isExpired = eventStatus === "Expired";
   useEffect(() => {
     const el = descBoxRef.current;
     if (!el) return;
@@ -94,19 +102,19 @@ const BookmarkListItem = ({id, eventData, bookmarkInfo, toggle, pending}) => {
       tabIndex={needsToggle ? 0 : -1}
       aria-expanded={needsToggle ? expanded : undefined}
     >
-      {status && (
+      {eventStatus && (
         <span
           className={[
             "absolute left-4 top-4 rounded-md px-2 py-0.5 text-xs font-semibold",
-            status === "In progress"
+            eventStatus === "In progress"
               ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
               : "",
-            status === "Expired"
+            eventStatus === "Expired"
               ? "bg-slate-200 text-slate-700 border border-slate-300"
               : "",
           ].join(" ")}
         >
-          {status}
+          {eventStatus}
         </span>
       )}
 
@@ -198,14 +206,153 @@ export default function BookmarksPage() {
   const { listBookmarkedEvents, toggle, isPending } = useBookmarks();
   const bookmarkedEvents = listBookmarkedEvents();
 
+  const [q, setQ] = useState("");
+  const [sortKey, setSortKey] = useState("bookmarked-desc");
+  const filteredSorted = useMemo(() => {
+    const now = new Date();
+
+    // Filter by search & hideExpired
+    const matches = bookmarkedEvents.filter(({ eventData }) => {
+      if (!eventData) return false;
+
+      if (!q) return true;
+      const hay = [
+        eventData.title,
+        eventData.description,
+        eventData?._row?.location_address,
+      ]
+        .map(normalize)
+        .join(" ");
+
+      return hay.includes(normalize(q));
+    });
+
+     const withFields = matches.map((row) => {
+      const starts = row.eventData?._row?.starts_at
+        ? new Date(row.eventData._row.starts_at)
+        : null;
+      const ends = row.eventData?._row?.ends_at
+        ? new Date(row.eventData._row.ends_at)
+        : null;
+      return { ...row, __starts: starts, __ends: ends };
+    });
+
+    withFields.sort((a, b) => {
+      switch (sortKey) {
+        case "title-asc":
+          return normalize(a.eventData?.title).localeCompare(normalize(b.eventData?.title));
+        case "title-desc":
+          return normalize(b.eventData?.title).localeCompare(normalize(a.eventData?.title));
+        case "starts-asc": {
+          const av = a.__starts ? a.__starts.getTime() : Number.MAX_SAFE_INTEGER;
+          const bv = b.__starts ? b.__starts.getTime() : Number.MAX_SAFE_INTEGER;
+          return av - bv;
+        }
+        case "ends-asc": {
+          const av = a.__ends ? a.__ends.getTime() : Number.MAX_SAFE_INTEGER;
+          const bv = b.__ends ? b.__ends.getTime() : Number.MAX_SAFE_INTEGER;
+          return av - bv;
+        }
+        case "bookmarked-desc":
+        default:
+          return new Date(b.bookmarkInfo.updatedAt) - new Date(a.bookmarkInfo.updatedAt);
+      }
+    });
+
+    return withFields;
+  }, [bookmarkedEvents, q, sortKey]);
+
+  const expiredCount = useMemo(
+    () => bookmarkedEvents.filter(({ eventData }) => status(eventData) === "Expired").length,
+    [bookmarkedEvents]
+  );
+
+  // Bulk remove expired
+  const removeExpired = useCallback(async () => {
+    if (!expiredCount) return;
+    const ok = window.confirm(`Remove ${expiredCount} expired bookmark(s)?`);
+    if (!ok) return;
+
+    // fire-and-forget toggles; your hook can coalesce requests if needed
+    const tasks = bookmarkedEvents
+      .filter(({ eventData }) => status(eventData) === "Expired")
+      .map(({ id }) => toggle(id, false));
+    await Promise.allSettled(tasks);
+  }, [bookmarkedEvents, expiredCount, toggle]);
   return (
     <div className="card bg-base-100">
       <div className="card-body">
-        <h2 className="card-title">Bookmarked Events</h2>
-        <p>Your saved events will appear here.</p>
+<div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="card-title">Bookmarked Events</h2>
+            <p className="text-sm opacity-70">
+              {bookmarkedEvents.length} total · {expiredCount} expired
+            </p>
+          </div>
+
+          {/* Toolbar */}
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+            {/* Search */}
+            <label className="input input-sm flex items-center gap-2 w-full" aria-label="Search bookmarks">
+              <svg
+                className="h-4 opacity-60"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+              >
+                <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </g>
+              </svg>
+              <input
+                type="search"
+                placeholder="Search title/description/address"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent outline-none"
+                aria-label="Search bookmarks"
+              />
+              {q && (
+                <button
+                  className="text-xs opacity-60 hover:opacity-100"
+                  onClick={() => setQ("")}
+                  type="button"
+                >
+                  Clear
+                </button>
+              )}
+            </label>
+
+            {/* Sort */}
+            <select
+              className="select select-sm w-full"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+              title="Sort by"
+            >
+              <option value="bookmarked-desc">Recently bookmarked</option>
+              <option value="starts-asc">Starts soon</option>
+              <option value="ends-asc">Ends soon</option>
+              <option value="title-asc">Title A–Z</option>
+              <option value="title-desc">Title Z–A</option>
+            </select>
+
+            {/* Remove expired */}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline btn-error"
+              disabled={!expiredCount}
+              onClick={removeExpired}
+              title={expiredCount ? "Remove all expired bookmarks" : "No expired bookmarks"}
+            >
+              Remove expired
+            </button>
+          </div>
+        </div>
+
         {/* Display bookmarked events */}
         <div className="mt-4 grid gap-4">
-          {bookmarkedEvents.length === 0 ? (
+          {filteredSorted.length === 0 ? (
             <div className="alert alert-info">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -220,10 +367,12 @@ export default function BookmarksPage() {
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
-              <span>No bookmarks yet. Start exploring and bookmark events you like!</span>
+              <span>{
+                q ? "No bookmarked events match your search." : "No bookmarked events yet."
+              }</span>
             </div>
           ) : (
-            bookmarkedEvents.map(({ id, eventData, bookmarkInfo }) =>
+            filteredSorted.map(({ id, eventData, bookmarkInfo }) =>
               <BookmarkListItem
                 key={id}
                 id={id}
