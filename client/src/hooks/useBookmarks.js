@@ -68,14 +68,14 @@ export function useBookmarks() {
         if (totalCount > 0) {
           push({
             type: "info",
-            message: `You have ${todays[0]?.total ?? 0} bookmarked event starting today and ${todays[1]?.total ?? 0} ending today.`,
+            message: `You have ${todays[0]?.total ?? 0} bookmarked events starting and ${todays[1]?.total ?? 0} ending today.`,
             autoCloseMs: 10000,
             stickyKey: "todays-bookmarks",
-            actions: [{
+            action: {
               label: "View",
               onClick: () => {},
               href: "/bookmarks",
-            }]
+            }
           });
         }
       } catch {

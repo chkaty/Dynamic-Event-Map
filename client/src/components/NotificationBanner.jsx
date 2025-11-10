@@ -60,29 +60,27 @@ function Banner({ n, onClose, autoCloseMs = 0 }) {
             <p className="mt-0.5 text-sm text-slate-800 leading-snug">{n.message}</p>
           )}
 
-          {!!(n.actions?.length) && (
-            <div className="mt-2 flex flex-wrap gap-3 text-sm">
-              {n.actions.map((a, i) => (
-                <a
-                  key={i}
-                  className="underline hover:opacity-80"
-                  href={a.href}
-                  onClick={a.onClick}
-                >
-                  {a.label}
-                </a>
-              ))}
-            </div>
-          )}
         </div>
-
-        <button
-          className="ml-2 rounded-md px-2 py-1 text-sm text-slate-700 hover:bg-white/60"
-          onClick={handleClose}
-          aria-label="Dismiss"
-        >
-          ✕
-        </button>
+        <div className="flex flex-shrink-0 flex-row items-center">
+          {n.action &&
+           <div className="flex flex-col gap-2">
+            <a
+              className="rounded-md bg-slate-700 px-3 py-1 text-sm text-white hover:bg-slate-800"
+              href={n.action.href}
+              onClick={n.action.onClick}
+            >
+              {n.action.label}
+            </a>
+           </div>
+          }
+          <button
+            className="ml-2 rounded-md px-2 py-1 text-sm text-slate-700 hover:bg-white/60"
+            onClick={handleClose}
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
       </div>
     </div>
   );
