@@ -63,18 +63,20 @@ export function useBookmarks() {
         if (isDismissedToday("todays-bookmarks")) return;
         const todays = await fetchTodaysBookmarks();
         if (cancelled || latestRunRef.current !== runId) return;
-        let msg = "";//
         // push notification if there are any
         const totalCount = (todays[0]?.total ?? 0) + (todays[1]?.total ?? 0);
         if (totalCount > 0) {
-          msg = `You have ${todays[0]?.total ?? 0} bookmarked event starting today and ${todays[1]?.total ?? 0} ending today.`;
-          push({ type: "info", message: msg, autoCloseMs: 10000,
+          push({
+            type: "info",
+            message: `You have ${todays[0]?.total ?? 0} bookmarked event starting today and ${todays[1]?.total ?? 0} ending today.`,
+            autoCloseMs: 10000,
             stickyKey: "todays-bookmarks",
             actions: [{
-            label: "View",
-            onClick: () => {},
-            href: "/bookmarks",
-          }]});
+              label: "View",
+              onClick: () => {},
+              href: "/bookmarks",
+            }]
+          });
         }
       } catch {
       }
