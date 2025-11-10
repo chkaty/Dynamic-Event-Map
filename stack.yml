@@ -74,6 +74,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - proxy
+      - internal
     deploy:
       placement:
         constraints:
@@ -179,6 +180,7 @@ services:
           memory: 128M
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.network=eventmap_proxy"
         - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
         - "traefik.http.routers.api.entrypoints=websecure"
         - "traefik.http.routers.api.tls.certresolver=le"
@@ -197,7 +199,7 @@ services:
 
   client:
     image: ghcr.io/shang8024/dynamic-event-map-client:latest
-    networks: [proxy, internal]
+    networks: [proxy]
     depends_on: [api]
     deploy:
       replicas: 1
@@ -205,6 +207,7 @@ services:
       restart_policy: { condition: any, delay: 5s, max_attempts: 3 }
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.network=eventmap_proxy"
         - "traefik.http.routers.client.rule=Host(`${DOMAIN}`)"
         - "traefik.http.routers.client.entrypoints=websecure"
         - "traefik.http.routers.client.tls.certresolver=le"
