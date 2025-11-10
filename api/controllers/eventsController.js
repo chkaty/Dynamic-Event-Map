@@ -2,7 +2,7 @@ const Event = require("../models/eventModel");
 const redisClient = require("../config/redis");
 const socket = require("../socket");
 const pool = require("../config/db");
-const { invalidateEventCountCache, bumpEventCount } = require("./statsController");
+const { bumpEventCount } = require("./statsController");
 
 const getEvents = async (req, res) => {
   try {
