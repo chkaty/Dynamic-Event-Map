@@ -31,7 +31,6 @@ const corsOptions = {
         ...originList,
         "http://localhost", // Allow localhost for testing
       ].filter(Boolean))); // Remove any undefined values
-      console.log("CORS allowed origins:", allowedOrigins);
 
       // Allow same-origin requests (no origin header) OR requests from allowed origins
       if (!origin || allowedOrigins.includes(origin)) {
