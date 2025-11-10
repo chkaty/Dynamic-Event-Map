@@ -80,6 +80,7 @@ export default function EventMap() {
   // toggles for panels
   const [filterOpen, setFilterOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(true);
+  const [statsOpen, setStatsOpen] = useState(true);
   // filters
   const [filterTime, setFilterTime] = useState("all");
   const [filterCategory, setFilterCategory] = useState("");
@@ -721,6 +722,17 @@ export default function EventMap() {
           />
           <span className="text-sm font-medium">Search</span>
         </label>
+
+        {/* Stats toggle */}
+        <label className="flex cursor-pointer items-center gap-1">
+          <input
+            type="checkbox"
+            defaultChecked
+            className="toggle toggle-sm"
+            onChange={() => setStatsOpen(!statsOpen)}
+          />
+          <span className="text-sm font-medium">Stats</span>
+        </label>
       </div>
 
       <div
@@ -740,6 +752,12 @@ export default function EventMap() {
             options={MAP_OPTIONS}
             onLoad={onMapLoad}
           >
+            {/* Stats container */}
+            {statsOpen && (
+              <div className="bg-base-200/90 absolute bottom-4 right-4 rounded-lg p-2 shadow">
+                <span className="text-sm font-medium">Total Events: {filteredEvents.length}</span>
+              </div>
+            )}
             {/* Filters container */}
             {filterOpen && (
               <div className="bg-base-200/90 absolute bottom-4 left-4 flex flex-col gap-3 rounded-lg p-2 shadow">
