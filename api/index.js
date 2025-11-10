@@ -9,10 +9,10 @@ const authRoutes = require("./routes/auth");
 const profilesRoutes = require("./routes/profiles");
 
 require("dotenv").config();
-app.set('trust proxy', 1);
 
 const app = express();
 const port = process.env.PORT || 5000;
+app.set('trust proxy', 1);
 
 app.use(express.json());
 
