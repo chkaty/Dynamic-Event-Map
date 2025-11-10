@@ -154,7 +154,7 @@ docker stack deploy -c docker-compose.swarm-local.yml dynamic-event-map
     - Your db/ init scripts (run only on first DB init)
     - Your Firebase Service Account JSON file
 
-- A Domain owned by yourself and connected to your droplet (A records, service prodiers setup, ...)
+- A Domain owned by yourself and connected to your droplet (A records, service providers setup, ...)
 
 ## First Deploy One-time setup
 
