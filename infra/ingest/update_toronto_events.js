@@ -1,5 +1,6 @@
 import pg from "pg";
 import fs from "node:fs";
+import redis from "redis";
 const { Client } = pg;
 function categorizeEventByKeyword(event) {
   const text = `${event.title} ${event.description || ""}`.toLowerCase();
