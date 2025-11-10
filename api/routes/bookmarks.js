@@ -10,7 +10,6 @@ router.get('/', firebaseAuth, bookmarksController.getBookmarks);
 router.post('/:eventId', firebaseAuth, bookmarksController.createBookmark);
 
 // DELETE /api/bookmarks/:bookmarkId
-router.delete('/:bookmarkId', firebaseAuth, bookmarksController.deleteBookmark);
-
 router.get('/today', firebaseAuth, bookmarksController.getTodaysBookmarks);
+router.delete('/:bookmarkId', firebaseAuth, bookmarksController.deleteBookmark);
 module.exports = router;
