@@ -48,7 +48,7 @@ services:
       # Use Swarm provider
       - --providers.swarm=true
       - --providers.swarm.endpoint=unix:///var/run/docker.sock
-      - --providers.swarm.network=proxy
+      - --providers.swarm.network=eventmap_proxy
 
       # Entrypoints
       - --entrypoints.web.address=:80
