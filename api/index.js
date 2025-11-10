@@ -28,8 +28,7 @@ const corsOptions = {
         ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
         : [];
       const allowedOrigins = Array.from(new Set([
-        ...originList,
-        "http://localhost", // Allow localhost for testing
+        ...originList
       ].filter(Boolean))); // Remove any undefined values
 
       // Allow same-origin requests (no origin header) OR requests from allowed origins
