@@ -63,7 +63,6 @@ export function useBookmarks() {
         if (isDismissedToday("todays-bookmarks")) return;
         const todays = await fetchTodaysBookmarks();
         if (cancelled || latestRunRef.current !== runId) return;
-        console.log("Today's bookmarked events:", todays);
         let msg = "";//
         // push notification if there are any
         const totalCount = (todays[0]?.total ?? 0) + (todays[1]?.total ?? 0);
