@@ -309,6 +309,7 @@ async function main() {
   await client.query(`
     DELETE FROM events e
     WHERE e.ends_at IS NOT NULL AND e.ends_at < NOW()
+      AND e.source = 'external'
       AND NOT EXISTS (
         SELECT 1 FROM bookmarks b
         WHERE b.event_id = e.id

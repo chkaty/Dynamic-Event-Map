@@ -2,7 +2,7 @@ import { API_BASE, post, del, get } from "./apiService.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 export async function fetchBookmarks() {
-  const result = await get(`/bookmarks`, {});
+  const result = await get(`/bookmarks`);
   return { items: result };
 }
 
