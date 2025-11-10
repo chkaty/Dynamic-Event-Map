@@ -113,7 +113,7 @@ docker build -t dynamic-event-map-api:latest ./api
 
 # Build Client image
 $Env:DOCKER_BUILDKIT=1
-docker build -f ./client/Dockerfile.local `
+docker build -f ./client/Dockerfile `
   -t dynamic-event-map-client:latest `
   --build-arg VITE_GOOGLE_MAPS_KEY=$Env:VITE_GOOGLE_MAPS_KEY `
   --build-arg VITE_FIREBASE_API_KEY=$Env:VITE_FIREBASE_API_KEY `
@@ -123,16 +123,28 @@ docker build -f ./client/Dockerfile.local `
   --build-arg VITE_FIREBASE_APP_ID=$Env:VITE_FIREBASE_APP_ID `
   --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=$Env:VITE_FIREBASE_MESSAGING_SENDER_ID `
   client
+
+# Build Event Ingest image
+docker build -t dynamic-event-map-events-ingest:latest ./infra/ingest
 ```
 
 ### 5. Deploy Stack with 2 API Replicas
 ```
-docker stack deploy -c docker-compose.swarm-local.yml dynamic-event-map
+docker stack deploy -c docker-compose.swarm-local.yml eventmap
 ```
-### 4. Access the Application
-- **Frontend**: http://localhost:80
+### 6. Access the Application
+- **Frontend**: http://localhost
 - **Backend API**: http://localhost/api
 - **Database**: localhost:5432
+
+### 7. Pull with event_ingest service
+
+```
+# set replicas to 1 so a task is actually created
+docker service update --replicas 1 eventmap_events_ingest
+# after task done, scale back to 0
+docker service update --replicas 0 eventmap_events_ingest
+```
 
 ## Deploy Swarm on Digital Ocean
 
