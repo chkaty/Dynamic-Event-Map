@@ -27,7 +27,7 @@ function Banner({ n, onClose, autoCloseMs = 0 }) {
     if (!autoCloseMs) return;
     const t = setTimeout(() => handleClose(), autoCloseMs);
     return () => clearTimeout(t);
-  }, [autoCloseMs]);
+  }, [autoCloseMs, handleClose]);
 
   function handleClose() {
     // trigger fade-out first, then call onClose

@@ -153,7 +153,9 @@ const updateEvent = async (req, res) => {
     if (result.rowCount === 0)
       return res.status(404).json({ error: "Event not found" });
     const ev = result.rows[0];
-    await bumpEventCount(0);
+    if ((starts_at && found.rows[0].starts_at !== starts_at) || (ends_at && found.rows[0].ends_at !== ends_at)){
+      await bumpEventCount(0);
+    }
     try {
       socket.getIO().emit("event:updated", ev);
     } catch (e) {}

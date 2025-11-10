@@ -10,6 +10,7 @@ export default function EventComments({ eventId }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { push } = useNotifications();
 
   const load = async () => {
     setLoading(true);
