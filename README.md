@@ -145,12 +145,18 @@ docker stack deploy -c docker-compose.swarm-local.yml dynamic-event-map
 - Images available in a registry (e.g., GHCR):
     - ghcr.io/<OWNER>/<REPO>-api:latest
     - ghcr.io/<OWNER>/<REPO>-client:latest
+    - ...(other services that need internal network)
 
 - Your stack.yml expects:
 
-    - Postgres bound to /mnt/pgdata
-    - A Swarm secret named pg_password
+    - Postgres, Redis bound to /mnt/pgdata/postgres-data, /mnt/pgdata/redis-data
+    - Swarm secret named pg_password, redis_password
     - Your db/ init scripts (run only on first DB init)
+    - Your Firebase Service Account JSON file
+
+- A Domain owned by yourself and connected to your droplet (A records, service prodiers setup, ...)
+
+## First Deploy One-time setup
 
 ### 1. SSH into the droplet and install Docker
 ```
@@ -196,7 +202,17 @@ echo -n 'YOUR_STRONG_REDIS_PASSWORD' | docker secret create redis_password -
 docker secret ls | grep redis_password
 ```
 
-### 5. Put your stack files on the droplet
+### 5. Create a file "firebase-service-account.json" in /api:
+```bash
+cd /api
+touch firebase-service-account.json
+```
+In Firebase: Project Overview -> Project Settings -> Service Accounts -> Generate new private key
+Copy the service account key JSON into firebase-service-account.json.
+
+## Pull & Deploy, Go to github Action CI/CD section or manually following:
+
+### 6. Put your stack files and .env files on the droplet
 
 Create a deploy directory and copy your files (via scp or any secure method):
 ```
@@ -204,27 +220,22 @@ mkdir -p /root/deploy
 # From your laptop:
 # scp -r stack.yml db/ root@<YOUR_PUBLIC_IPV4>:/root/deploy/
 ```
-
-### 6. Create a minimal /root/deploy/.env (no secrets inside)
+Also add/copy a `.env` file to `/root/deploy`. It should contains following:
 ```
-cat >/root/deploy/.env <<'EOF'
 BACKEND_PORT=5000
-FRONTEND_PORT=80
+DB_PORT=5432
 DB_NAME=eventsdb
 DB_USER=user
-DB_PORT=5432
 REDIS_PORT=6379
-# Only keep non-secrets here. The DB password comes from the Swarm secret.
-EOF
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+DOMAIN=<your-domain.com>
+EMAIL=<your-LE-domain-email>
 ```
-
-and Create a file "firebase-service-account.json" in /api:
-```bash
-cd /api
-touch firebase-service-account.json
-```
-In Firebase: Project Overview -> Project Settings -> Service Accounts -> Generate new private key
-Copy the service account key JSON into firebase-service-account.json.
 
 ### 7. Log into your registry on the droplet and pull images
 ```
@@ -258,16 +269,22 @@ docker service logs -f eventmap_api
 docker service logs -f eventmap_db
 ```
 
-### 9. Setup a Scheduled Timer to Clean Up Docker
+## After first deploy, One-time Setup (on droplet)
 
-## Scheduled Clean & Backup
+### 9. allow tcp ports:
+```bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+```
+
+### 10. Setup Scheduled Timers
 
 Copy the `infra` folder to your droplet `/root/deploy`:
 
 Run `bash /root/deploy/infra/scripts/bootstrap/setup_infra.sh`.
 
 
-## CI/CD
+## CI/CD pipelines
 
 On your repo, add those:
 
@@ -288,6 +305,10 @@ On your repo, add those:
   - `FIREBASE_APP_ID`
 
   - `FIREBASE_MESSAGING_SENDER_ID`
+
+  - `DOMAIN`
+
+  - `EMAIL`
 
 - Repository variables:
 
