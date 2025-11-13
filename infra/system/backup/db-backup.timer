@@ -1,9 +1,9 @@
 [Unit]
-Description=Database Backup Timer (Daily at 3 AM)
+Description=Database Backup Timer (Weekly on Sundays at 3 AM)
 Requires=db-backup.service
 
 [Timer]
-OnCalendar=*-*-* 03:00:00
+OnCalendar=Sun *-*-* 03:00:00
 Persistent=true
 
 [Install]

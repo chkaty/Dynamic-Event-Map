@@ -88,7 +88,12 @@ if [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ] && [ -n "$S3_ACCESS_KEY" ] && [ 
         echo "[$(date)] WARNING: Failed to clean up old backups"
     fi
 else
-    echo "[$(date)] WARNING: S3 configuration incomplete, skipping upload to Spaces"
+    missing_vars=""
+    [ -z "$S3_BUCKET" ] && missing_vars="${missing_vars} S3_BUCKET"
+    [ -z "$S3_ENDPOINT" ] && missing_vars="${missing_vars} S3_ENDPOINT"
+    [ -z "$S3_ACCESS_KEY" ] && missing_vars="${missing_vars} S3_ACCESS_KEY"
+    [ -z "$S3_SECRET_KEY" ] && missing_vars="${missing_vars} S3_SECRET_KEY"
+    echo "[$(date)] WARNING: S3 configuration incomplete (missing:${missing_vars}), skipping upload to Spaces"
 fi
 
 # Clean up local backup file
