@@ -30,7 +30,14 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
             # Install s3cmd if not present
-            command -v s3cmd >/dev/null 2>&1 || apt-get update && apt-get install -y s3cmd
+            if ! command -v s3cmd >/dev/null 2>&1; then
+              if command -v apt-get >/dev/null 2>&1; then
+                apt-get update && apt-get install -y s3cmd
+              else
+                echo "Error: s3cmd not found and apt-get is not available. Please install s3cmd manually or ensure the system is Debian/Ubuntu-based."
+                exit 1
+              fi
+            fi
             
             # Configure s3cmd
             cat > /tmp/.s3cfg <<EOF
