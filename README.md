@@ -353,7 +353,7 @@ The application includes automated database backup to DigitalOcean Spaces with r
 Manually trigger:
 
 **Backup**:
-- Go to Github ACTIONS → Database Restore
+- Go to Github ACTIONS → Database Backup
 
 **Restore**:
 - Go to GitHub Actions → Database Restore
