@@ -68,20 +68,6 @@ jobs:
               --provenance=false \
               ./infra/ingest
 
-      - name: Build & push Backup
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_on: error
-          command: |
-            docker buildx build \
-              --push \
-              --tag ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:latest \
-              --tag ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:${{ github.sha }} \
-              --provenance=false \
-              ./infra/backup
-
       - name: Build & push Client (inject prod API base URL)
         uses: nick-fields/retry@v3
         with:
@@ -183,8 +169,6 @@ jobs:
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-api:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-client:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-events-ingest:${{ github.sha }}
-            docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:${{ github.sha }}
-
             echo "[*] Deploying/Updating stack: ${{ env.STACK }}"
 
             set -a
