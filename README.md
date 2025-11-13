@@ -353,7 +353,7 @@ The application includes automated database backup to DigitalOcean Spaces with r
 Manually trigger:
 
 **Backup**:
-- Go to Github ACTIONS → Database Restore
+- Go to Github ACTIONS → Database Backup
 
 **Restore**:
 - Go to GitHub Actions → Database Restore
@@ -361,7 +361,7 @@ Manually trigger:
 
 ### Toronto Events Ingest
 
-The application includes automated daily pull from Toronto Event&Festival Calender backup to PostgreSQL database and expired events cleanup.
+The application includes automated daily pull from Toronto Event&Festival Calendar backup to PostgreSQL database and expired events cleanup.
 
 Manually trigger:
 
