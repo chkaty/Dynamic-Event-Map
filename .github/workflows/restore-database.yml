@@ -15,7 +15,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-db-backup
+  IMAGE_NAME: ${{secrets.GHCR_USER}}/dynamic-event-map-db-backup
 
 jobs:
   list-backups:
