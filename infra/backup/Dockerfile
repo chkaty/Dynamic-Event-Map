@@ -1,13 +1,16 @@
 FROM postgres:16-alpine
 
-# Install s3cmd for DigitalOcean Spaces backup
+# Install rclone for DigitalOcean Spaces backup (S3-compatible)
 RUN apk add --no-cache \
-    python3 \
-    py3-dateutil \
-    py3-magic \
     bash \
-    && python3 -m ensurepip \
-    && pip3 install --no-cache-dir --break-system-packages s3cmd
+    curl \
+    ca-certificates \
+    && curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip \
+    && unzip rclone-current-linux-amd64.zip \
+    && cp rclone-*-linux-amd64/rclone /usr/local/bin/ \
+    && chmod +x /usr/local/bin/rclone \
+    && rm -rf rclone-* \
+    && apk del curl
 
 # Copy backup scripts
 COPY backup.sh /usr/local/bin/backup.sh

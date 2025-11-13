@@ -58,21 +58,19 @@ fi
 if [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ] && [ -n "$S3_ACCESS_KEY" ] && [ -n "$S3_SECRET_KEY" ]; then
     echo "[$(date)] Uploading backup to DigitalOcean Spaces..."
     
-    # Configure s3cmd
-    cat > /tmp/.s3cfg <<EOF
-[default]
-access_key = $S3_ACCESS_KEY
-secret_key = $S3_SECRET_KEY
-host_base = $S3_ENDPOINT
-host_bucket = %(bucket)s.$S3_ENDPOINT
-use_https = True
-EOF
+    # Configure rclone for S3-compatible storage
+    export RCLONE_CONFIG_SPACES_TYPE=s3
+    export RCLONE_CONFIG_SPACES_PROVIDER=DigitalOcean
+    export RCLONE_CONFIG_SPACES_ACCESS_KEY_ID="$S3_ACCESS_KEY"
+    export RCLONE_CONFIG_SPACES_SECRET_ACCESS_KEY="$S3_SECRET_KEY"
+    export RCLONE_CONFIG_SPACES_ENDPOINT="https://$S3_ENDPOINT"
+    export RCLONE_CONFIG_SPACES_ACL=private
 
     # Upload backup
-    s3cmd -c /tmp/.s3cfg put "$BACKUP_PATH" "s3://$S3_BUCKET/backups/"
+    rclone copy "$BACKUP_PATH" "spaces:$S3_BUCKET/backups/" --progress
     
     if [ $? -eq 0 ]; then
-        echo "[$(date)] Backup uploaded successfully to s3://$S3_BUCKET/backups/$BACKUP_FILENAME"
+        echo "[$(date)] Backup uploaded successfully to spaces:$S3_BUCKET/backups/$BACKUP_FILENAME"
     else
         echo "[$(date)] ERROR: Upload to Spaces failed"
         exit 1
@@ -80,20 +78,15 @@ EOF
     
     # Clean up old backups in Spaces (older than BACKUP_RETENTION_DAYS)
     echo "[$(date)] Cleaning up old backups (older than $BACKUP_RETENTION_DAYS days)..."
-    CUTOFF_DATE=$(date -d "$BACKUP_RETENTION_DAYS days ago" +%Y%m%d 2>/dev/null || date -v-${BACKUP_RETENTION_DAYS}d +%Y%m%d)
     
-    s3cmd -c /tmp/.s3cfg ls "s3://$S3_BUCKET/backups/" | while read -r line; do
-        BACKUP_DATE=$(echo "$line" | grep -oP 'backup_[^_]+_\K\d{8}' || true)
-        BACKUP_FILE=$(echo "$line" | awk '{print $4}')
-        
-        if [ -n "$BACKUP_DATE" ] && [ "$BACKUP_DATE" -lt "$CUTOFF_DATE" ]; then
-            echo "Deleting old backup: $BACKUP_FILE"
-            s3cmd -c /tmp/.s3cfg del "$BACKUP_FILE" || true
-        fi
-    done
+    # Delete files older than BACKUP_RETENTION_DAYS
+    rclone delete "spaces:$S3_BUCKET/backups/" --min-age "${BACKUP_RETENTION_DAYS}d" --include "backup_*.sql.gz"
     
-    # Clean up s3cfg
-    rm -f /tmp/.s3cfg
+    if [ $? -eq 0 ]; then
+        echo "[$(date)] Old backups cleaned up successfully"
+    else
+        echo "[$(date)] WARNING: Failed to clean up old backups"
+    fi
 else
     echo "[$(date)] WARNING: S3 configuration incomplete, skipping upload to Spaces"
 fi

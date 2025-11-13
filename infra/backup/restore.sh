@@ -35,41 +35,40 @@ echo "Database: $DB_HOST:$DB_PORT/$DB_NAME"
 echo "Backup file: $BACKUP_FILE"
 
 # Download from DigitalOcean Spaces if not a local file
-if [[ "$BACKUP_FILE" == s3://* ]] || [ ! -f "$BACKUP_FILE" ]; then
+if [[ "$BACKUP_FILE" == spaces://* ]] || [[ "$BACKUP_FILE" == s3://* ]] || [ ! -f "$BACKUP_FILE" ]; then
     if [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ] && [ -n "$S3_ACCESS_KEY" ] && [ -n "$S3_SECRET_KEY" ]; then
         echo "[$(date)] Downloading backup from DigitalOcean Spaces..."
         
-        # Configure s3cmd
-        cat > /tmp/.s3cfg <<EOF
-[default]
-access_key = $S3_ACCESS_KEY
-secret_key = $S3_SECRET_KEY
-host_base = $S3_ENDPOINT
-host_bucket = %(bucket)s.$S3_ENDPOINT
-use_https = True
-EOF
+        # Configure rclone for S3-compatible storage
+        export RCLONE_CONFIG_SPACES_TYPE=s3
+        export RCLONE_CONFIG_SPACES_PROVIDER=DigitalOcean
+        export RCLONE_CONFIG_SPACES_ACCESS_KEY_ID="$S3_ACCESS_KEY"
+        export RCLONE_CONFIG_SPACES_SECRET_ACCESS_KEY="$S3_SECRET_KEY"
+        export RCLONE_CONFIG_SPACES_ENDPOINT="https://$S3_ENDPOINT"
+        export RCLONE_CONFIG_SPACES_ACL=private
 
-        # Determine the S3 path
-        if [[ "$BACKUP_FILE" == s3://* ]]; then
-            S3_PATH="$BACKUP_FILE"
+        # Determine the remote path
+        if [[ "$BACKUP_FILE" == spaces://* ]] || [[ "$BACKUP_FILE" == s3://* ]]; then
+            # Remove protocol prefix
+            BACKUP_FILE="${BACKUP_FILE#spaces://}"
+            BACKUP_FILE="${BACKUP_FILE#s3://}"
+            REMOTE_PATH="spaces:$BACKUP_FILE"
         else
-            S3_PATH="s3://$S3_BUCKET/backups/$BACKUP_FILE"
+            REMOTE_PATH="spaces:$S3_BUCKET/backups/$BACKUP_FILE"
         fi
         
         LOCAL_BACKUP="$RESTORE_DIR/$(basename $BACKUP_FILE)"
         
         # Download backup
-        s3cmd -c /tmp/.s3cfg get "$S3_PATH" "$LOCAL_BACKUP"
+        rclone copy "$REMOTE_PATH" "$RESTORE_DIR/" --progress
         
-        if [ $? -eq 0 ]; then
+        if [ $? -eq 0 ] && [ -f "$LOCAL_BACKUP" ]; then
             echo "[$(date)] Backup downloaded successfully"
             BACKUP_FILE="$LOCAL_BACKUP"
         else
             echo "[$(date)] ERROR: Failed to download backup from Spaces"
             exit 1
         fi
-        
-        rm -f /tmp/.s3cfg
     else
         echo "ERROR: S3 configuration incomplete, cannot download backup"
         exit 1
