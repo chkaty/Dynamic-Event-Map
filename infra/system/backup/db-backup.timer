@@ -1,0 +1,11 @@
+[Unit]
+Description=Database Backup Timer (Daily at 3 AM)
+Requires=db-backup.service
+
+[Timer]
+OnCalendar=daily
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

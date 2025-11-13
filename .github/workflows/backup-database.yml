@@ -1,0 +1,86 @@
+name: Database Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 0" # weekly backup at 04:00 UTC every Sunday
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-db-backup
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix={{date 'YYYYMMDD'}}-
+
+      - name: Build and push backup image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./infra/backup
+          file: ./infra/backup/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Trigger backup on droplet
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ vars.DO_SSH_HOST }}
+          username: ${{ vars.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /root/deploy
+            
+            # Pull latest backup image
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Update stack to use new image
+            docker stack deploy -c stack.yml eventmap --with-registry-auth
+            
+            # Run backup
+            docker service update --replicas 1 eventmap_db_backup
+            
+            echo "[*] task finished."
+            # get last task id
+            TID="$(docker service ps --no-trunc --format '{{.ID}}' eventmap_db_backup | head -n1)"
+
+            # print logs if we can
+            CID="$(docker inspect "$TID" --format '{{.Status.ContainerStatus.ContainerID}}' 2>/dev/null || true)"
+            if [ -n "$CID" ]; then
+              echo "[*] logs from container $CID:"
+              docker logs "$CID" 2>&1 || true
+            else
+              echo "[!] no container id for task $TID"
+            fi
+
+            echo "[*] scale back to 0"
+            docker service update --replicas 0 eventmap_db_backup
+            docker service ps eventmap_db_backup --no-trunc
+            exit 1
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Database backup failed. Check logs for details."

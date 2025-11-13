@@ -1,0 +1,146 @@
+name: Database Restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: 'Backup filename (e.g., backup_eventsdb_20231110_120000.sql.gz) or leave empty to list available backups'
+        required: false
+        type: string
+      list_backups:
+        description: 'List available backups instead of restoring'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-db-backup
+
+jobs:
+  list-backups:
+    if: ${{ inputs.list_backups }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: List available backups
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ vars.DO_SSH_HOST }}
+          username: ${{ vars.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            # Install s3cmd if not present
+            command -v s3cmd >/dev/null 2>&1 || apt-get update && apt-get install -y s3cmd
+            
+            # Configure s3cmd
+            cat > /tmp/.s3cfg <<EOF
+            [default]
+            access_key = ${{ secrets.DO_SPACES_ACCESS_KEY }}
+            secret_key = ${{ secrets.DO_SPACES_SECRET_KEY }}
+            host_base = ${{ secrets.DO_SPACES_ENDPOINT }}
+            host_bucket = %(bucket)s.${{ secrets.DO_SPACES_ENDPOINT }}
+            use_https = True
+            EOF
+            
+            echo "Available backups:"
+            s3cmd -c /tmp/.s3cfg ls s3://${{ secrets.DO_SPACES_BUCKET }}/backups/ | sort -r | head -n 20
+            
+            rm -f /tmp/.s3cfg
+
+  restore:
+    if: ${{ !inputs.list_backups && inputs.backup_file != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Confirm restore operation
+        run: |
+          echo "⚠️  WARNING: This will restore the database from backup!"
+          echo "Backup file: ${{ inputs.backup_file }}"
+          echo "This operation will OVERWRITE the current database."
+          echo "Make sure you have a recent backup before proceeding."
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Build and push backup image (if needed)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./infra/backup
+          file: ./infra/backup/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Restore database on droplet
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ vars.DO_SSH_HOST }}
+          username: ${{ vars.DO_SSH_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            cd /root/deploy
+            
+            # Pull latest backup image
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Create a one-time restore service
+            docker service create \
+              --name db_restore_temp \
+              --network eventmap_internal \
+              --secret pg_password \
+              --env DB_HOST=db \
+              --env DB_PORT=${{ vars.DB_PORT }} \
+              --env DB_NAME=${{ vars.DB_NAME }} \
+              --env DB_USER=${{ vars.DB_USER }} \
+              --env DB_PASSWORD_FILE=/run/secrets/pg_password \
+              --env BACKUP_FILE=${{ inputs.backup_file }} \
+              --env S3_BUCKET=${{ secrets.DO_SPACES_BUCKET }} \
+              --env S3_ENDPOINT=${{ secrets.DO_SPACES_ENDPOINT }} \
+              --env S3_ACCESS_KEY=${{ secrets.DO_SPACES_ACCESS_KEY }} \
+              --env S3_SECRET_KEY=${{ secrets.DO_SPACES_SECRET_KEY }} \
+              --restart-condition none \
+              --entrypoint /usr/local/bin/restore.sh \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Wait for restore to complete (max 30 minutes)
+            timeout=1800
+            elapsed=0
+            while [ $elapsed -lt $timeout ]; do
+              state=$(docker service ps db_restore_temp --filter "desired-state=shutdown" --format "{{.CurrentState}}" | head -n1)
+              if echo "$state" | grep -q "Complete"; then
+                echo "✅ Database restored successfully"
+                docker service logs db_restore_temp
+                docker service rm db_restore_temp
+                exit 0
+              fi
+              if echo "$state" | grep -q "Failed"; then
+                echo "❌ Database restore failed"
+                docker service logs db_restore_temp
+                docker service rm db_restore_temp
+                exit 1
+              fi
+              sleep 10
+              elapsed=$((elapsed + 10))
+            done
+            
+            echo "⏱️  Restore timed out"
+            docker service logs db_restore_temp
+            docker service rm db_restore_temp
+            exit 1
+
+      - name: Notify on success
+        if: success()
+        run: echo "✅ Database restored successfully from ${{ inputs.backup_file }}"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Database restore failed. Check logs for details."

@@ -60,6 +60,16 @@ jobs:
             ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-events-ingest:${{ github.sha }}
           provenance: false
 
+      - name: Build & push Backup
+        uses: docker/build-push-action@v6
+        with:
+          context: ./infra/backup
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:latest
+            ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:${{ github.sha }}
+          provenance: false
+
       - name: Build & push Client (inject prod API base URL)
         uses: docker/build-push-action@v6
         with:
@@ -120,6 +130,10 @@ jobs:
             VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
             DOMAIN=${{ secrets.DOMAIN }}
             EMAIL=${{ secrets.EMAIL }}
+            DO_SPACES_BUCKET=${{ secrets.DO_SPACES_BUCKET }}
+            DO_SPACES_ENDPOINT=${{ secrets.DO_SPACES_ENDPOINT }}
+            DO_SPACES_ACCESS_KEY=${{ secrets.DO_SPACES_ACCESS_KEY }}
+            DO_SPACES_SECRET_KEY=${{ secrets.DO_SPACES_SECRET_KEY }}
             EOF
 
             echo "[*] Ensuring Swarm is active..."
@@ -154,6 +168,7 @@ jobs:
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-api:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-client:${{ github.sha }}
             docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-events-ingest:${{ github.sha }}
+            docker pull ${{ env.REGISTRY }}/${{ secrets.GHCR_USER }}/${{ env.REPO_LC }}-db-backup:${{ github.sha }}
 
             echo "[*] Deploying/Updating stack: ${{ env.STACK }}"
 
