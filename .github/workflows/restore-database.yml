@@ -120,28 +120,38 @@ jobs:
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             
             # Wait for restore to complete (max 30 minutes)
+            echo "[*] Waiting for restore to complete..."
             timeout=1800
             elapsed=0
             while [ $elapsed -lt $timeout ]; do
-              state=$(docker service ps db_restore_temp --filter "desired-state=shutdown" --format "{{.CurrentState}}" | head -n1)
+              sleep 10
+              elapsed=$((elapsed + 10))
+              
+              # Get current task state (without filtering by desired-state)
+              state=$(docker service ps db_restore_temp --format "{{.CurrentState}}" --no-trunc | head -n1)
+              echo "[$elapsed s] Current state: $state"
+              
+              # Check if task completed successfully
               if echo "$state" | grep -q "Complete"; then
                 echo "✅ Database restored successfully"
-                docker service logs db_restore_temp
+                docker service logs db_restore_temp --no-trunc
                 docker service rm db_restore_temp
                 exit 0
               fi
+              
+              # Check if task failed
               if echo "$state" | grep -q "Failed"; then
                 echo "❌ Database restore failed"
-                docker service logs db_restore_temp
+                docker service logs db_restore_temp --no-trunc
                 docker service rm db_restore_temp
                 exit 1
               fi
-              sleep 10
-              elapsed=$((elapsed + 10))
+              
+              # Still running - continue waiting
             done
             
-            echo "⏱️  Restore timed out"
-            docker service logs db_restore_temp
+            echo "⏱️  Restore timed out after $timeout seconds"
+            docker service logs db_restore_temp --no-trunc
             docker service rm db_restore_temp
             exit 1
 
