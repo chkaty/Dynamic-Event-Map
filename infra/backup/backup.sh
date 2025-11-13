@@ -27,14 +27,14 @@ mkdir -p "$BACKUP_DIR"
 
 # Generate timestamp for backup filename
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILENAME="backup_${DB_NAME}_${TIMESTAMP}.sql.gz"
+BACKUP_FILENAME="backup_${DB_NAME}_${TIMESTAMP}.dump"
 BACKUP_PATH="$BACKUP_DIR/$BACKUP_FILENAME"
 
 echo "[$(date)] Starting database backup..."
 echo "Database: $DB_HOST:$DB_PORT/$DB_NAME"
 echo "Backup file: $BACKUP_FILENAME"
 
-# Create PostgreSQL backup (plain SQL format with gzip compression)
+# Create PostgreSQL backup (custom format with built-in compression)
 export PGPASSWORD="$DB_PASSWORD"
 pg_dump -h "$DB_HOST" \
         -p "$DB_PORT" \
@@ -42,7 +42,8 @@ pg_dump -h "$DB_HOST" \
         -d "$DB_NAME" \
         --no-owner \
         --no-acl \
-        | gzip > "$BACKUP_PATH"
+        -Fc \
+        -f "$BACKUP_PATH"
 
 if [ $? -eq 0 ]; then
     echo "[$(date)] Backup created successfully: $BACKUP_PATH"
@@ -79,7 +80,7 @@ if [ -n "$S3_BUCKET" ] && [ -n "$S3_ENDPOINT" ] && [ -n "$S3_ACCESS_KEY" ] && [ 
     echo "[$(date)] Cleaning up old backups (older than $BACKUP_RETENTION_DAYS days)..."
     
     # Delete files older than BACKUP_RETENTION_DAYS
-    rclone delete "spaces:$S3_BUCKET/backups/" --min-age "${BACKUP_RETENTION_DAYS}d" --include "backup_*.sql.gz"
+    rclone delete "spaces:$S3_BUCKET/backups/" --min-age "${BACKUP_RETENTION_DAYS}d" --include "backup_*.dump"
     
     if [ $? -eq 0 ]; then
         echo "[$(date)] Old backups cleaned up successfully"

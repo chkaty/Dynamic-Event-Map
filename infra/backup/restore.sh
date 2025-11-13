@@ -23,7 +23,7 @@ fi
 
 if [ -z "$BACKUP_FILE" ]; then
     echo "Error: BACKUP_FILE environment variable is required"
-    echo "Usage: docker run -e BACKUP_FILE=backup_eventsdb_20231110_120000.sql.gz ..."
+    echo "Usage: docker run -e BACKUP_FILE=backup_eventsdb_20231110_120000.dump ..."
     exit 1
 fi
 
@@ -79,12 +79,20 @@ fi
 echo "[$(date)] Restoring database from $BACKUP_FILE..."
 export PGPASSWORD="$DB_PASSWORD"
 
-# Decompress and restore (using psql for plain SQL format)
-gunzip -c "$BACKUP_FILE" | psql -h "$DB_HOST" \
-                                 -p "$DB_PORT" \
-                                 -U "$DB_USER" \
-                                 -d "$DB_NAME" \
-                                 --quiet
+# Restore using pg_restore (custom format)
+# --clean: Drop database objects before recreating
+# --if-exists: Use IF EXISTS when dropping objects (prevents errors if object doesn't exist)
+# --no-owner: Skip ownership commands
+# --no-acl: Skip access privileges commands
+pg_restore -h "$DB_HOST" \
+           -p "$DB_PORT" \
+           -U "$DB_USER" \
+           -d "$DB_NAME" \
+           --clean \
+           --if-exists \
+           --no-owner \
+           --no-acl \
+           "$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
     echo "[$(date)] Database restored successfully"
