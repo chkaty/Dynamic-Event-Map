@@ -72,21 +72,6 @@ jobs:
           echo "This operation will OVERWRITE the current database."
           echo "Make sure you have a recent backup before proceeding."
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.GHCR_USER }}
-          password: ${{ secrets.GHCR_PAT }}
-
-      - name: Build and push backup image (if needed)
-        uses: docker/build-push-action@v5
-        with:
-          context: ./infra/backup
-          file: ./infra/backup/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
       - name: Restore database on droplet
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -95,9 +80,13 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
             cd /root/deploy
-            
-            # Pull latest backup image
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # Check if backup service exists
+            if ! docker service ls --format '{{.Name}}' | grep -q '^eventmap_db_backup$'; then
+              echo "FATAL: service eventmap_db_backup not found. Deploy stack first."
+              docker service ls
+              exit 1
+            fi
             
             # Create a one-time restore service
             docker service create \
