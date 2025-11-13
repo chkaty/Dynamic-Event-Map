@@ -361,7 +361,7 @@ Manually trigger:
 
 ### Toronto Events Ingest
 
-The application includes automated daily pull from Toronto Event&Festival Calender backup to PostgreSQL database and expired events cleanup.
+The application includes automated daily pull from Toronto Event&Festival Calendar backup to PostgreSQL database and expired events cleanup.
 
 Manually trigger:
 
