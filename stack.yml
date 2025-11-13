@@ -291,3 +291,10 @@ services:
       replicas: 0
       restart_policy:
         condition: none
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
