@@ -94,6 +94,7 @@ jobs:
             
             # Create a one-time restore service
             docker service create \
+              --detach=true \
               --name db_restore_temp \
               --network eventmap_internal \
               --secret pg_password \

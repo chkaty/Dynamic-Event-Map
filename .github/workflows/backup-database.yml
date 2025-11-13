@@ -63,7 +63,7 @@ jobs:
             
             # Run backup
             echo "[*] Starting backup service..."
-            docker service update --replicas 1 eventmap_db_backup
+            docker service update --detach=true --replicas 1 eventmap_db_backup
             
             # Wait for task to complete (check every 5 seconds for up to 5 minutes)
             echo "[*] Waiting for backup to complete..."
