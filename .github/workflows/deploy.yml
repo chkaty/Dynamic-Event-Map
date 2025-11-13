@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Build & push API
-        uses: nick-fields/retry-action@v3
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -55,7 +55,7 @@ jobs:
               ./api
 
       - name: Build & push Ingest
-        uses: nick-fields/retry-action@v3
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -69,7 +69,7 @@ jobs:
               ./infra/ingest
 
       - name: Build & push Backup
-        uses: nick-fields/retry-action@v3
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -83,7 +83,7 @@ jobs:
               ./infra/backup
 
       - name: Build & push Client (inject prod API base URL)
-        uses: nick-fields/retry-action@v3
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
