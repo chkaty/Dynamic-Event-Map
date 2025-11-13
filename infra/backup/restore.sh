@@ -100,4 +100,3 @@ fi
 rm -rf "$RESTORE_DIR"
 
 echo "[$(date)] Restore process completed successfully"
-exit 1

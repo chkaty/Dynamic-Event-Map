@@ -52,6 +52,7 @@ jobs:
           username: ${{ vars.DO_SSH_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
+            set -e
             cd /root/deploy
             
             # Pull latest backup image
@@ -61,24 +62,55 @@ jobs:
             docker stack deploy -c stack.yml eventmap --with-registry-auth
             
             # Run backup
+            echo "[*] Starting backup service..."
             docker service update --replicas 1 eventmap_db_backup
             
-            echo "[*] task finished."
-            # get last task id
-            TID="$(docker service ps --no-trunc --format '{{.ID}}' eventmap_db_backup | head -n1)"
-
-            # print logs if we can
-            CID="$(docker inspect "$TID" --format '{{.Status.ContainerStatus.ContainerID}}' 2>/dev/null || true)"
-            if [ -n "$CID" ]; then
-              echo "[*] logs from container $CID:"
-              docker logs "$CID" 2>&1 || true
-            else
-              echo "[!] no container id for task $TID"
-            fi
-
-            echo "[*] scale back to 0"
+            # Wait for task to complete (check every 5 seconds for up to 5 minutes)
+            echo "[*] Waiting for backup to complete..."
+            for i in {1..60}; do
+              sleep 5
+              
+              # Get current task state
+              STATE=$(docker service ps eventmap_db_backup --format '{{.CurrentState}}' --no-trunc | head -n1)
+              echo "[$i] Current state: $STATE"
+              
+              # Check if task completed
+              if echo "$STATE" | grep -q "Complete"; then
+                echo "[✓] Backup task completed successfully"
+                
+                # Get task logs
+                TID=$(docker service ps --no-trunc --format '{{.ID}}' eventmap_db_backup | head -n1)
+                echo "[*] Task ID: $TID"
+                echo "[*] Fetching logs..."
+                docker service logs eventmap_db_backup --no-trunc --tail 50
+                
+                # Scale back to 0
+                echo "[*] Scaling service back to 0 replicas..."
+                docker service update --replicas 0 eventmap_db_backup
+                
+                # Verify backup was uploaded by checking logs for success message
+                if docker service logs eventmap_db_backup --no-trunc --tail 50 2>&1 | grep -q "Backup uploaded successfully"; then
+                  echo "[✓] Backup verified - uploaded to Spaces successfully"
+                  exit 0
+                else
+                  echo "[✗] Backup may have failed - upload success message not found"
+                  exit 1
+                fi
+              fi
+              
+              # Check if task failed with error
+              if echo "$STATE" | grep -q "Failed"; then
+                echo "[✗] Backup task failed"
+                docker service logs eventmap_db_backup --no-trunc --tail 50
+                docker service update --replicas 0 eventmap_db_backup
+                exit 1
+              fi
+            done
+            
+            # Timeout - task didn't complete in 5 minutes
+            echo "[✗] Timeout waiting for backup to complete"
+            docker service logs eventmap_db_backup --no-trunc --tail 50
             docker service update --replicas 0 eventmap_db_backup
-            docker service ps eventmap_db_backup --no-trunc
             exit 1
 
       - name: Notify on failure

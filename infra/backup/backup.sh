@@ -95,4 +95,3 @@ fi
 rm -f "$BACKUP_PATH"
 
 echo "[$(date)] Backup process completed successfully"
-exit 1
