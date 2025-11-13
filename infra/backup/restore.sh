@@ -79,15 +79,12 @@ fi
 echo "[$(date)] Restoring database from $BACKUP_FILE..."
 export PGPASSWORD="$DB_PASSWORD"
 
-# Decompress and restore
-gunzip -c "$BACKUP_FILE" | pg_restore -h "$DB_HOST" \
-                                      -p "$DB_PORT" \
-                                      -U "$DB_USER" \
-                                      -d "$DB_NAME" \
-                                      --clean \
-                                      --if-exists \
-                                      --no-owner \
-                                      --no-acl
+# Decompress and restore (using psql for plain SQL format)
+gunzip -c "$BACKUP_FILE" | psql -h "$DB_HOST" \
+                                 -p "$DB_PORT" \
+                                 -U "$DB_USER" \
+                                 -d "$DB_NAME" \
+                                 --quiet
 
 if [ $? -eq 0 ]; then
     echo "[$(date)] Database restored successfully"

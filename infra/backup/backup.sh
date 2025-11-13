@@ -34,7 +34,7 @@ echo "[$(date)] Starting database backup..."
 echo "Database: $DB_HOST:$DB_PORT/$DB_NAME"
 echo "Backup file: $BACKUP_FILENAME"
 
-# Create PostgreSQL backup
+# Create PostgreSQL backup (plain SQL format with gzip compression)
 export PGPASSWORD="$DB_PASSWORD"
 pg_dump -h "$DB_HOST" \
         -p "$DB_PORT" \
@@ -42,7 +42,6 @@ pg_dump -h "$DB_HOST" \
         -d "$DB_NAME" \
         --no-owner \
         --no-acl \
-        -Fc \
         | gzip > "$BACKUP_PATH"
 
 if [ $? -eq 0 ]; then
