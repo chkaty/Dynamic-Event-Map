@@ -57,7 +57,7 @@ if [[ "$BACKUP_FILE" == spaces://* ]] || [[ "$BACKUP_FILE" == s3://* ]] || [ ! -
             REMOTE_PATH="spaces:$S3_BUCKET/backups/$BACKUP_FILE"
         fi
         
-        LOCAL_BACKUP="$RESTORE_DIR/$(basename $BACKUP_FILE)"
+        LOCAL_BACKUP="$RESTORE_DIR/$(basename "$BACKUP_FILE")"
         
         # Download backup
         rclone copy "$REMOTE_PATH" "$RESTORE_DIR/" --progress
