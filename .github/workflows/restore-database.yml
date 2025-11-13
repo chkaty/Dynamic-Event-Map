@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       backup_file:
-        description: 'Backup filename (e.g., backup_eventsdb_20231110_120000.sql.gz) or leave empty to list available backups'
+        description: 'Backup filename (e.g., backup_eventsdb_20231110_120000.dump) or leave empty to list available backups'
         required: false
         type: string
       list_backups:
