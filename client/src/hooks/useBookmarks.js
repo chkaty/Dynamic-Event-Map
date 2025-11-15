@@ -33,6 +33,27 @@ export function useBookmarks() {
     };
   }, []);
 
+  const refetchBookmarks = useCallback(async () => {
+    if (!user) {
+      setBookmarkedIds(new Set());
+      setItems([]);
+      return;
+    }
+    
+    try {
+      const { items: serverItems = [] } = await fetchBookmarks();
+      setItems(serverItems);
+      const ids = new Set(
+        serverItems
+          .map((it) => (typeof it?.data?.id === "number" ? it.data.id : undefined))
+          .filter((n) => typeof n === "number")
+      );
+      setBookmarkedIds(ids);
+    } catch {
+      push({ type: "error", message: "Failed to load bookmarks", autoCloseMs: 5000 });
+    }
+  }, [user, push]);
+
   useEffect(() => {
     let cancelled = false;
     if (!user) {
@@ -153,14 +174,13 @@ export function useBookmarks() {
             throw new Error("Bookmark ID not found for removal");
           }
         }
-      } catch {
-        // Handle errors (e.g., revert optimistic update)
-        setBookmarkedIds((old) => {
-          const ns = new Set(old);
-          if (prev) ns.add(eventId);
-          else ns.delete(eventId);
-          return ns;
-        });
+      } catch (error) {
+        // Handle errors - refetch bookmarks to sync with server state
+        // This handles cases where bookmark was changed on another device/tab
+        try {
+          await refetchBookmarks();
+        } catch {
+        }
         push({ type: "error", message: "Failed to update bookmark", autoCloseMs: 5000 });
       } finally {
         // clear pending
@@ -171,7 +191,7 @@ export function useBookmarks() {
         });
       }; 
     },
-    [bookmarkedIds, items, user]
+    [bookmarkedIds, items, user, push, refetchBookmarks]
   );
 
   // useEffect(() => {
@@ -214,7 +234,8 @@ export function useBookmarks() {
       isPending,
       toggle,
       listBookmarkedEvents,
+      refetchBookmarks,
     }),
-    [isBookmarked, isPending, toggle, listBookmarkedEvents]
+    [isBookmarked, isPending, toggle, listBookmarkedEvents, refetchBookmarks]
   );
 }
