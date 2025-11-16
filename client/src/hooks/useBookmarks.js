@@ -184,7 +184,8 @@ export function useBookmarks() {
         // This handles cases where bookmark was changed on another device/tab
         try {
           await refetchBookmarks();
-        } catch {
+        } catch (refetchError) {
+          console.error('Failed to refetch bookmarks after toggle error:', refetchError);
         }
         push({ type: "error", message: "Failed to update bookmark", autoCloseMs: 5000 });
       } finally {
