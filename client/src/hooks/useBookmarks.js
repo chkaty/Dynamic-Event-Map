@@ -208,7 +208,7 @@ export function useBookmarks() {
           ns.delete(eventId);
           return ns;
         });
-      }; 
+      }
     },
     [bookmarkedIds, items, user, push, refetchBookmarks]
   );
