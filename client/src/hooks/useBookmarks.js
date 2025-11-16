@@ -143,50 +143,63 @@ export function useBookmarks() {
         if (willMark) {
           const result = await addBookmark(eventId);
           await fetchBookmarkStats(eventId);
-          const already = items.some((it) => it?.data?.id === eventId);
-          if (!already && eventObj) {
-            const rowLike = {
-              id: eventId,
-              title: eventObj.title ?? `Event ${eventId}`,
-              description: eventObj.description ?? null,
-              latitude: eventObj.position?.lat ?? null,
-              longitude: eventObj.position?.lng ?? null,
-              data: eventObj.data ?? {},
-            };
-            setItems((old) => [
-              { data: rowLike, created_at: new Date().toISOString(), id: result.id },
-              ...old,
-            ]);
-          } else {
-            setItems((old) => {
-              return old.map((it) => {
-                if (it?.data?.id === eventId && it.id !== result.id) {
-                  return { data: it.data, created_at: it.created_at, id: result.id };
-                }
-                return it;
+          
+          // Only show success for newly created bookmarks (201)
+          if (!result.alreadyExists) {
+            const already = items.some((it) => it?.data?.id === eventId);
+            if (!already && eventObj) {
+              const rowLike = {
+                id: eventId,
+                title: eventObj.title ?? `Event ${eventId}`,
+                description: eventObj.description ?? null,
+                latitude: eventObj.position?.lat ?? null,
+                longitude: eventObj.position?.lng ?? null,
+                data: eventObj.data ?? {},
+              };
+              setItems((old) => [
+                { data: rowLike, created_at: new Date().toISOString(), id: result.id },
+                ...old,
+              ]);
+            } else {
+              setItems((old) => {
+                return old.map((it) => {
+                  if (it?.data?.id === eventId && it.id !== result.id) {
+                    return { data: it.data, created_at: it.created_at, id: result.id };
+                  }
+                  return it;
+                });
               });
-            });
+            }
+            push({ type: "success", message: "Bookmark added successfully", autoCloseMs: 2000 });
+          } else {
+            // Already exists, just refetch to sync state
+            await refetchBookmarks();
           }
-          push({ type: "success", message: "Bookmark added successfully", autoCloseMs: 2000 });
         } else {
           let bookmarkId = items.find((it) => it?.data?.id === eventId)?.id;
           if (bookmarkId) {
-            await removeBookmark(bookmarkId);
-            await fetchBookmarkStats(eventId);
-            setItems((old) => old.filter((it) => it?.data?.id !== eventId));
-            push({ type: "success", message: "Bookmark removed successfully", autoCloseMs: 2000 });
+            try {
+              await removeBookmark(bookmarkId);
+              await fetchBookmarkStats(eventId);
+              setItems((old) => old.filter((it) => it?.data?.id !== eventId));
+              push({ type: "success", message: "Bookmark removed successfully", autoCloseMs: 2000 });
+            } catch (deleteError) {
+              // If 404, bookmark was already deleted (possibly on another device)
+              // Just refetch to sync state, don't show error
+              if (deleteError.status === 404 || deleteError.message?.includes('404')) {
+                await refetchBookmarks();
+              } else {
+                throw deleteError;
+              }
+            }
           } else {
-            throw new Error("Bookmark ID not found for removal");
+            // Bookmark ID not found locally, refetch to sync
+            await refetchBookmarks();
           }
         }
       } catch (error) {
-        // Handle errors - refetch bookmarks to sync with server state
-        // This handles cases where bookmark was changed on another device/tab
-        try {
-          await refetchBookmarks();
-        } catch (refetchError) {
-          console.error('Failed to refetch bookmarks after toggle error:', refetchError);
-        }
+        // Handle unexpected errors (network issues, server errors, etc.)
+        console.error('Failed to toggle bookmark:', error);
         push({ type: "error", message: "Failed to update bookmark", autoCloseMs: 5000 });
       } finally {
         // clear pending

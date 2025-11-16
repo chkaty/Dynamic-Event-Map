@@ -21,7 +21,9 @@ module.exports = {
 
   create: ({ eventId, userId }) =>
     pool.query(
-      'INSERT INTO bookmarks (event_id, user_id) VALUES ($1, $2) RETURNING *',
+      `INSERT INTO bookmarks (event_id, user_id) VALUES ($1, $2)
+       ON CONFLICT (user_id, event_id) DO UPDATE SET created_at = bookmarks.created_at
+       RETURNING *, (xmax = 0) AS inserted`,
       [eventId, userId]
     ),
 

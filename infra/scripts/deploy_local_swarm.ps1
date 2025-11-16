@@ -19,9 +19,9 @@ Write-Host ""
 Write-Host "[1/8] Checking Docker..." -ForegroundColor Yellow
 try {
     docker info | Out-Null
-    Write-Host "✓ Docker is running" -ForegroundColor Green
+    Write-Host "[OK] Docker is running" -ForegroundColor Green
 } catch {
-    Write-Host "✗ Docker is not running. Please start Docker Desktop." -ForegroundColor Red
+    Write-Host "[FAIL] Docker is not running. Please start Docker Desktop." -ForegroundColor Red
     exit 1
 }
 Write-Host ""
@@ -32,9 +32,9 @@ $SwarmStatus = docker info --format '{{.Swarm.LocalNodeState}}'
 if ($SwarmStatus -ne "active") {
     Write-Host "Initializing Swarm..." -ForegroundColor Gray
     docker swarm init
-    Write-Host "✓ Docker Swarm initialized" -ForegroundColor Green
+    Write-Host "[OK] Docker Swarm initialized" -ForegroundColor Green
 } else {
-    Write-Host "✓ Docker Swarm already active" -ForegroundColor Green
+    Write-Host "[OK] Docker Swarm already active" -ForegroundColor Green
 }
 Write-Host ""
 
@@ -43,19 +43,19 @@ Write-Host "[3/8] Configuring node labels..." -ForegroundColor Yellow
 $NodeId = docker node ls --format '{{.ID}}' --filter role=manager
 docker node update --label-add postgres=true $NodeId | Out-Null
 docker node update --label-add redis=true $NodeId | Out-Null
-Write-Host "✓ Node labels configured (postgres=true, redis=true)" -ForegroundColor Green
+Write-Host "[OK] Node labels configured (postgres=true, redis=true)" -ForegroundColor Green
 Write-Host ""
 
 # Check for .env file
 Write-Host "[4/8] Checking environment configuration..." -ForegroundColor Yellow
 $EnvFile = Join-Path $ProjectRoot ".env"
 if (-not (Test-Path $EnvFile)) {
-    Write-Host "✗ .env file not found!" -ForegroundColor Red
+    Write-Host "[FAIL] .env file not found!" -ForegroundColor Red
     Write-Host "Please copy .env.example to .env and configure it:" -ForegroundColor Yellow
     Write-Host "  cp .env.example .env" -ForegroundColor Gray
     exit 1
 }
-Write-Host "✓ .env file found" -ForegroundColor Green
+Write-Host "[OK] .env file found" -ForegroundColor Green
 
 # Load environment variables
 Get-Content $EnvFile | ForEach-Object {
@@ -65,7 +65,7 @@ Get-Content $EnvFile | ForEach-Object {
         [Environment]::SetEnvironmentVariable($name, $value, "Process")
     }
 }
-Write-Host "✓ Environment variables loaded" -ForegroundColor Green
+Write-Host "[OK] Environment variables loaded" -ForegroundColor Green
 
 # Validate required environment variables
 Write-Host "Validating required variables..." -ForegroundColor Gray
@@ -94,26 +94,26 @@ foreach ($VarName in $RequiredVars) {
 }
 
 if ($MissingVars.Count -gt 0) {
-    Write-Host "✗ Missing required environment variables:" -ForegroundColor Red
+    Write-Host "[FAIL] Missing required environment variables:" -ForegroundColor Red
     foreach ($VarName in $MissingVars) {
         Write-Host "  - $VarName" -ForegroundColor Red
     }
     Write-Host "Please ensure all required variables are set in .env file" -ForegroundColor Yellow
     exit 1
 }
-Write-Host "✓ All required variables present" -ForegroundColor Green
+Write-Host "[OK] All required variables present" -ForegroundColor Green
 Write-Host ""
 
 # Check for Firebase service account
 Write-Host "[5/8] Checking Firebase credentials..." -ForegroundColor Yellow
 $FirebaseFile = Join-Path $ProjectRoot "api\firebase-service-account.json"
 if (-not (Test-Path $FirebaseFile)) {
-    Write-Host "✗ Firebase service account file not found at:" -ForegroundColor Red
+    Write-Host "[FAIL] Firebase service account file not found at:" -ForegroundColor Red
     Write-Host "  $FirebaseFile" -ForegroundColor Gray
     Write-Host "Please add your Firebase service account JSON file." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "✓ Firebase service account found" -ForegroundColor Green
+Write-Host "[OK] Firebase service account found" -ForegroundColor Green
 
 # Create or update Docker secret
 Write-Host "Creating/updating Docker secret..." -ForegroundColor Gray
@@ -123,7 +123,7 @@ if ($SecretExists) {
     docker secret rm firebase-service-account.json 2>$null | Out-Null
 }
 docker secret create firebase-service-account.json $FirebaseFile | Out-Null
-Write-Host "✓ Docker secret created" -ForegroundColor Green
+Write-Host "[OK] Docker secret created" -ForegroundColor Green
 Write-Host ""
 
 # Build images
@@ -135,10 +135,10 @@ Write-Host ""
 Write-Host "  Building API image..." -ForegroundColor Cyan
 docker build -t dynamic-event-map-api:latest -f (Join-Path $ProjectRoot "api\Dockerfile") (Join-Path $ProjectRoot "api")
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "✗ API build failed" -ForegroundColor Red
+    Write-Host "  [FAIL] API build failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "  ✓ API image built" -ForegroundColor Green
+Write-Host "  [OK] API image built" -ForegroundColor Green
 
 # Build Client
 Write-Host "  Building Client image..." -ForegroundColor Cyan
@@ -154,19 +154,19 @@ $ClientEnvArgs = @(
 )
 & docker build -t dynamic-event-map-client:latest @ClientEnvArgs -f (Join-Path $ProjectRoot "client\Dockerfile") (Join-Path $ProjectRoot "client")
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "✗ Client build failed" -ForegroundColor Red
+    Write-Host "  [FAIL] Client build failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "  ✓ Client image built" -ForegroundColor Green
+Write-Host "  [OK] Client image built" -ForegroundColor Green
 
 # Build Events Ingest
 Write-Host "  Building Events Ingest image..." -ForegroundColor Cyan
 docker build -t dynamic-event-map-events-ingest:latest -f (Join-Path $ProjectRoot "infra\ingest\Dockerfile") (Join-Path $ProjectRoot "infra\ingest")
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "✗ Events Ingest build failed" -ForegroundColor Red
+    Write-Host "  [FAIL] Events Ingest build failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "  ✓ Events Ingest image built" -ForegroundColor Green
+Write-Host "  [OK] Events Ingest image built" -ForegroundColor Green
 Write-Host ""
 
 # Deploy stack
@@ -174,10 +174,10 @@ Write-Host "[7/8] Deploying stack..." -ForegroundColor Yellow
 $ComposeFile = Join-Path $ProjectRoot "docker-compose.swarm-local.yml"
 docker stack deploy -c $ComposeFile eventmap --with-registry-auth
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "✗ Stack deployment failed" -ForegroundColor Red
+    Write-Host "[FAIL] Stack deployment failed" -ForegroundColor Red
     exit 1
 }
-Write-Host "✓ Stack deployed successfully" -ForegroundColor Green
+Write-Host "[OK] Stack deployed successfully" -ForegroundColor Green
 Write-Host ""
 
 # Wait for services to be ready
@@ -209,7 +209,7 @@ while ($Elapsed -lt $MaxWait) {
     }
     
     if ($AllReady) {
-        Write-Host "✓ All services are running" -ForegroundColor Green
+        Write-Host "[OK] All services are running" -ForegroundColor Green
         break
     }
     
@@ -219,7 +219,7 @@ while ($Elapsed -lt $MaxWait) {
 }
 
 if ($Elapsed -ge $MaxWait) {
-    Write-Host "⚠ Timeout waiting for services. Check status manually:" -ForegroundColor Yellow
+    Write-Host "[WARN] Timeout waiting for services. Check status manually:" -ForegroundColor Yellow
     Write-Host "  docker service ls" -ForegroundColor Gray
 }
 Write-Host ""

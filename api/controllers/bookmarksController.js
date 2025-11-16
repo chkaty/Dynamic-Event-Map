@@ -39,8 +39,16 @@ const createBookmark = async (req, res) => {
   const { eventId } = req.params;
   const uid = req.user?.id || req.body?.userId;
   try {
-    const created = await Bookmark.create({ eventId: eventId, userId: uid });
-    res.json({ id: created.rows[0].id, eventId: created.rows[0].event_id, userId: created.rows[0].user_id, created_at: created.rows[0].created_at });
+    const result = await Bookmark.create({ eventId: eventId, userId: uid });
+    const bookmark = result.rows[0];
+    const isNew = bookmark.inserted;
+    res.status(isNew ? 201 : 200).json({
+      id: bookmark.id,
+      eventId: bookmark.event_id,
+      userId: bookmark.user_id,
+      created_at: bookmark.created_at,
+      alreadyExists: !isNew
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create bookmark' });
