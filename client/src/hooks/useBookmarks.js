@@ -186,7 +186,7 @@ export function useBookmarks() {
             } catch (deleteError) {
               // If 404, bookmark was already deleted (possibly on another device)
               // Just refetch to sync state, don't show error
-              if (deleteError.status === 404 || deleteError.message?.includes('404')) {
+              if (deleteError.message?.includes('404')) {
                 await refetchBookmarks();
               } else {
                 throw deleteError;
