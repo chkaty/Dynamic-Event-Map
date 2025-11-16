@@ -40,8 +40,12 @@ export function useBookmarks() {
       return;
     }
     
+    const runId = Symbol();
+    latestRunRef.current = runId;
+    
     try {
       const { items: serverItems = [] } = await fetchBookmarks();
+      if (latestRunRef.current !== runId) return; // Check if this is still the latest call
       setItems(serverItems);
       const ids = new Set(
         serverItems
@@ -50,6 +54,7 @@ export function useBookmarks() {
       );
       setBookmarkedIds(ids);
     } catch {
+      if (latestRunRef.current !== runId) return; // Don't show error if outdated
       push({ type: "error", message: "Failed to load bookmarks", autoCloseMs: 5000 });
     }
   }, [user, push]);
