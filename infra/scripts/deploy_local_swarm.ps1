@@ -207,7 +207,8 @@ while ($Elapsed -lt $MaxWait) {
         }
     }
     
-    if ($AllReady) {
+    # Ensure at least one service was found before marking all as ready
+    if ($AllReady -and $Services.Count -gt 0) {
         Write-Host "[OK] All services are running" -ForegroundColor Green
         break
     }

@@ -94,7 +94,7 @@ docker-compose -f docker-compose.dev.yml up --build
 
 ## Docker Swarm Local
 
-Run 
+Run the following script to automatically deploy a local Docker Swarm stack for development and testing:
 
 ```
 .\infra\scripts\deploy_local_swarm.ps1
