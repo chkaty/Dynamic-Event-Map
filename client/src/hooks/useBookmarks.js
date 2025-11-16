@@ -205,8 +205,8 @@ export function useBookmarks() {
         // revert optimistic state
         setBookmarkedIds((old) => {
           const ns = new Set(old);
-          if (!willMark) ns.add(eventId);
-          else ns.delete(eventId);
+          if (willMark) ns.delete(eventId);
+          else ns.add(eventId);
           return ns;
         });
       } finally {
