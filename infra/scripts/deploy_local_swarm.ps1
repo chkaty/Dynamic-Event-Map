@@ -143,7 +143,6 @@ Write-Host "  [OK] API image built" -ForegroundColor Green
 # Build Client
 Write-Host "  Building Client image..." -ForegroundColor Cyan
 $ClientEnvArgs = @(
-    "--build-arg", "VITE_API_BASE_URL=$env:VITE_API_BASE_URL",
     "--build-arg", "VITE_GOOGLE_MAPS_KEY=$env:VITE_GOOGLE_MAPS_KEY",
     "--build-arg", "VITE_FIREBASE_API_KEY=$env:VITE_FIREBASE_API_KEY",
     "--build-arg", "VITE_FIREBASE_AUTH_DOMAIN=$env:VITE_FIREBASE_AUTH_DOMAIN",

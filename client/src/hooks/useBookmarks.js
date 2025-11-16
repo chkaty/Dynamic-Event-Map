@@ -201,6 +201,14 @@ export function useBookmarks() {
         // Handle unexpected errors (network issues, server errors, etc.)
         console.error('Failed to toggle bookmark:', error);
         push({ type: "error", message: "Failed to update bookmark", autoCloseMs: 5000 });
+
+        // revert optimistic state
+        setBookmarkedIds((old) => {
+          const ns = new Set(old);
+          if (!willMark) ns.add(eventId);
+          else ns.delete(eventId);
+          return ns;
+        });
       } finally {
         // clear pending
         setPendingIds((s) => {
