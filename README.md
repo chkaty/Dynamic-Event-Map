@@ -94,6 +94,12 @@ docker-compose -f docker-compose.dev.yml up --build
 
 ## Docker Swarm Local
 
+Run 
+
+```
+.\infra\scripts\deploy_local_swarm.ps1
+```
+
 ### 1. Initialize Docker Swarm
 ```powershell
 # Initialize swarm mode
