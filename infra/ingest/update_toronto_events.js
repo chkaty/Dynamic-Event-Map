@@ -223,6 +223,7 @@ async function main() {
     ]
   });
   
+  let rawArr = [];
   try {
     const page = await browser.newPage();
     
@@ -248,7 +249,7 @@ async function main() {
     console.log("[pull] successfully fetched data");
     await browser.close();
 
-    const rawArr = Array.isArray(json?.value) ? json.value : [];
+    rawArr = Array.isArray(json?.value) ? json.value : [];
     console.log(`[pull] got ${rawArr.length} events`);
   } catch (err) {
     await browser.close();
