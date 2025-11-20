@@ -180,8 +180,7 @@ export default function BookmarksPage() {
             {/* Search */}
             <SearchInput 
               value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onClear={() => setQ("")}
+              onChange={setQ}
             />
 
             {/* Sort */}
