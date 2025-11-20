@@ -14,7 +14,7 @@ import { useNotifications } from "../../contexts/NotificationContext.jsx";
 // -----------------------------
 // Constants
 // -----------------------------
-const MAP_STYLES = [
+const MAP_STYLES_DAY = [
   { elementType: "geometry", stylers: [{ color: "#ebe3cd" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#523735" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#f5f1e6" }] },
@@ -31,19 +31,40 @@ const MAP_STYLES = [
   { featureType: "transit.line", elementType: "geometry", stylers: [{ color: "#dfd2ae" }] },
   { featureType: "water", elementType: "geometry.fill", stylers: [{ color: "#b9d3c2" }] },
 ];
+const MAP_STYLES_NIGHT = [
+  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+  { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+  { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
+  {
+    featureType: "transit.station",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+  { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
+];
 
 const TORONTO_BOUNDS = {
   north: 43.855457,
   south: 43.581024,
   west: -79.639219,
   east: -79.115219,
-};
-
-const MAP_OPTIONS = {
-  styles: MAP_STYLES,
-  restriction: { latLngBounds: TORONTO_BOUNDS, strictBounds: true },
-  disableDefaultUI: true,
-  gestureHandling: "greedy",
 };
 
 // MarkerClusterer options: disable zoom-on-click so our handler controls behavior
@@ -78,19 +99,31 @@ export default function EventMap() {
   const [inputValue, setInputValue] = useState("");
   const [predictions, setPredictions] = useState([]);
   const [mode, setMode] = useState("search"); // 'search' | 'add' | 'event'
+  const [isDarkMode, setIsDarkMode] = useState(
+    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
+  const mapOptions = {
+    styles: isDarkMode ? MAP_STYLES_NIGHT : MAP_STYLES_DAY,
+    restriction: { latLngBounds: TORONTO_BOUNDS, strictBounds: true },
+    disableDefaultUI: true,
+    gestureHandling: "greedy",
+  };
+
   // toggles for panels
   const [filterOpen, setFilterOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(true);
   const [statsOpen, setStatsOpen] = useState(true);
+
   // filters
   const [filterTime, setFilterTime] = useState("all");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterDistanceKm, setFilterDistanceKm] = useState(0);
 
-  // Cluster pagination state
+  // cluster pagination state
   const [clusterEvents, setClusterEvents] = useState([]); // array of events in current cluster
   const [clusterIndex, setClusterIndex] = useState(0); // which event in cluster is shown
 
+  // other
   const { user } = useAuth();
   const { push } = useNotifications();
 
@@ -165,6 +198,13 @@ export default function EventMap() {
   // -----------------------------
   // Effects
   // -----------------------------
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e) => setIsDarkMode(e.matches);
+
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
   useEffect(() => {
     if (mode === "add") {
       setInputValue("");
@@ -409,6 +449,19 @@ export default function EventMap() {
     });
     loadTodayStats();
   }, []);
+
+  // Join event room
+  useEffect(() => {
+    if (!selectedEvent?.id) return;
+
+    socket.emit("joinEventRoom", selectedEvent.id);
+    console.log("Joined room for event", selectedEvent.id);
+
+    return () => {
+      socket.emit("leaveEventRoom", selectedEvent.id);
+      console.log("Left room for event", selectedEvent.id);
+    };
+  }, [selectedEvent]);
 
   useEffect(() => {
     socket.on("event:created", handleCreated);
@@ -714,10 +767,10 @@ export default function EventMap() {
     desktop: ` bg-base-200/90 md:absolute md:bottom-4 md:left-4 md:flex md:flex-col md:gap-3 md:rounded-lg md:p-2 md:shadow md:w-64`,
   };
   const EVENTINFO_STYLES = {
-    mobile: ` fixed top-0 right-0 bottom-0 z-50 w-100 bg-base-100 shadow-lg transition-transform duration-300 ${
+    mobile: ` fixed top-0 right-0 bottom-0 z-50 w-100 bg-base-100 shadow-lg transition-transform duration-300 overflow-hidden ${
       selectedEvent ? "translate-x-0" : "translate-x-full"
     }`,
-    desktop: `bg-base-100 md:absolute md:top-0 md:right-0 md:bottom-4 md:z-20 md:w-1/4 md:overflow-auto md:transition-transform md:duration-300 ${
+    desktop: `bg-base-100 md:overflow-hidden md:absolute md:top-0 md:right-0 md:bottom-4 md:z-20 md:w-1/4 md:overflow-auto md:transition-transform md:duration-300 ${
       selectedEvent ? "md:translate-x-0" : "md:translate-x-full"
     }`,
   };
@@ -775,7 +828,7 @@ export default function EventMap() {
             mapContainerStyle={{ width: "100%", height: `${mapHeight}px` }}
             center={center}
             zoom={14}
-            options={MAP_OPTIONS}
+            options={mapOptions}
             onLoad={onMapLoad}
           >
             {/* Stats container */}
