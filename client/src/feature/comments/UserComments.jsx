@@ -162,7 +162,7 @@ export default function UserComments() {
   }, [comments, q, sortKey]);
 
   const expiredCount = useMemo(
-    () => comments.filter((item) => getEventStatus(item) === "Event Expired").length,
+    () => comments.filter((item) => getEventStatus(item) === "Expired").length,
     [comments]
   );
 
