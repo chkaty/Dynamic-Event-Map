@@ -104,7 +104,7 @@ export default function UserComments() {
       const data = await fetchUserComments();
       setComments(data);
     } catch (err) {
-      notify("Failed to load comments", "error");
+      push({ type: "error", message: "Failed to load comments", autoCloseMs: 5000 });
 
       console.error("Failed to load comments:", err);
     } finally {
