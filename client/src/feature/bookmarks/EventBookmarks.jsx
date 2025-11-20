@@ -27,8 +27,6 @@ const BookmarkListItem = ({id, eventData, bookmarkInfo, toggle, pending}) => {
           {eventData && (
             <EventImage 
               event={eventData} 
-              className="flex-none w-40 md:w-56 aspect-[4/3]"
-              showDates={true}
             />
           )}
 
