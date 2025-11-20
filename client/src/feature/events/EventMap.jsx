@@ -10,7 +10,6 @@ import { useAuth } from "../../contexts/AuthContext.jsx";
 import { fetchEvents, deleteEvent, fetchTodaySummary } from "../../services/eventsService";
 import socket from "../../services/socket";
 import { useNotifications } from "../../contexts/NotificationContext.jsx";
-import { fetchBookmarks } from "../../services/bookmarksService.js";
 
 // -----------------------------
 // Constants
@@ -63,6 +62,7 @@ export default function EventMap() {
   const searchTimeoutRef = useRef(null);
   const lastSelectedRef = useRef(null);
   const optimisticRef = useRef({});
+  const hasLoadedRef = useRef(false);
 
   // core state
   const [center, setCenter] = useState({ lat: 43.7, lng: -79.42 });
@@ -304,133 +304,123 @@ export default function EventMap() {
     };
   }, []);
 
-  // load events from server
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const rows = await fetchEvents();
-        if (!mounted) return;
-        const mapped = (rows || []).map((r) => ({
-          id: r.id,
-          title: r.title,
-          description: r.description,
-          position: {
-            lat: Number(r.latitude),
-            lng: Number(r.longitude),
-          },
-          location_address: r.location_address,
-          starts_at: r.starts_at,
-          ends_at: r.ends_at,
-          user_id: r.user_id,
-          category: r.category,
-          img: r.data?.image?.url || null,
-          num_bookmarks: parseInt(r.bookmarks_count, 10)
-        }));
-        setEvents(mapped);
-      } catch (err) {
-        console.warn("failed to load events", err);
-        push({ type: "error", message: "Failed to load events", autoCloseMs: 5000 });
-      }
-    })();
-    (async () => {
-      try {
-        const stats = await fetchTodaySummary();
-        if (!mounted) return;
-        if (!stats || !(stats.starting || stats.ending)) return;
-        push({
-          type: "info",
-          message: `There are ${stats.starting} events starting and ${stats.ending} events ending today.`,
-          autoCloseMs: 10000,
-        });
-      } catch (err) {
-        console.warn("failed to load today's summary", err);
-      }
-    })();
-    return () => (mounted = false);
+  // Handle event
+  const loadEvents = useCallback(async () => {
+    try {
+      const rows = await fetchEvents();
+      const mapped = (rows || []).map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        position: {
+          lat: Number(r.latitude),
+          lng: Number(r.longitude),
+        },
+        location_address: r.location_address,
+        starts_at: r.starts_at,
+        ends_at: r.ends_at,
+        user_id: r.user_id,
+        category: r.category,
+        img: r.data?.image?.url || null,
+        num_bookmarks: parseInt(r.bookmarks_count, 10),
+      }));
+      setEvents(mapped);
+    } catch (err) {
+      console.warn("failed to load events", err);
+      push({ type: "error", message: "Failed to load events", autoCloseMs: 5000 });
+    }
   }, []);
 
-  // realtime socket listeners
-  useEffect(() => {
-    function onCreated(ev) {
-      const mapped = {
-        id: ev.id,
-        title: ev.title,
-        description: ev.description,
-        position: { lat: Number(ev.latitude ?? ev.lat), lng: Number(ev.longitude ?? ev.lng) },
-        location_address: ev.location_address,
-        starts_at: ev.starts_at,
-        img: ev.img || ev.data?.image?.url || null,
-        ends_at: ev.ends_at,
-        user_id: ev.user_id,
-        category: ev.category ?? (ev.data && ev.data.category) ?? "",
-      };
-      setEvents((prev) => {
-        if (prev.find((p) => String(p.id) === String(mapped.id))) return prev;
-        return [...prev, mapped];
+  const loadTodayStats = useCallback(async () => {
+    try {
+      const stats = await fetchTodaySummary();
+      if (!stats || !(stats.starting || stats.ending)) return;
+      push({
+        type: "info",
+        message: `There are ${stats.starting} events starting and ${stats.ending} events ending today.`,
+        autoCloseMs: 10000,
       });
+    } catch (err) {
+      console.warn("failed to load today's summary", err);
     }
-    function onUpdated(ev) {
-      setEvents((prev) =>
-        prev.map((p) =>
-          String(p.id) === String(ev.id)
-            ? {
-                id: ev.id,
-                title: ev.title,
-                description: ev.description,
-                position: {
-                  lat: Number(ev.latitude),
-                  lng: Number(ev.longitude),
-                },
-                location_address: ev.location_address,
-                starts_at: ev.starts_at,
-                ends_at: ev.ends_at,
-                user_id: ev.user_id,
-                category: ev.category,
-                img: ev.img || ev.data?.image?.url || null,
-              }
-            : p
-        )
-      );
-      setSelectedEvent((s) =>
-        s && String(s.id) === String(ev.id)
-          ? {
-              ...s,
-              title: ev.title,
-              description: ev.description,
-              position: {
-                lat: Number(ev.latitude ?? s.position.lat),
-                lng: Number(ev.longitude ?? s.position.lng),
-              },
-              location_address: ev.location_address,
-              starts_at: ev.starts_at,
-              ends_at: ev.ends_at,
-              user_id: ev.user_id,
-              img: ev.img || ev.data?.image?.url || null,
-            }
-          : s
-      );
-    }
-    function onDeleted(payload) {
-      setEvents((prev) => prev.filter((p) => String(p.id) !== String(payload.id)));
-      setSelectedEvent((s) => (s && String(s.id) === String(payload.id) ? null : s));
-      // if deleted event was in clusterEvents, remove it
-      setClusterEvents((prev) => prev.filter((c) => String(c.id) !== String(payload.id)));
-      if (clusterEvents.length && clusterIndex >= clusterEvents.length - 1) {
-        setClusterIndex(0);
-      }
-    }
+  }, []);
 
-    socket.on("event:created", onCreated);
-    socket.on("event:updated", onUpdated);
-    socket.on("event:deleted", onDeleted);
+  // initial mount
+  useEffect(() => {
+    // prevent duplicate runs in Strict Mode
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+
+    loadEvents();
+    loadTodayStats();
+  }, []);
+
+  const handleCreated = useCallback((ev) => {
+    const mapped = {
+      id: ev.id,
+      title: ev.title,
+      description: ev.description,
+      position: { lat: Number(ev.latitude ?? ev.lat), lng: Number(ev.longitude ?? ev.lng) },
+      location_address: ev.location_address,
+      starts_at: ev.starts_at,
+      ends_at: ev.ends_at,
+      user_id: ev.user_id,
+      category: ev.category ?? ev.data?.category ?? "",
+      img: ev.img || ev.data?.image?.url || null,
+    };
+
+    setEvents((prev) => {
+      if (prev.some((p) => String(p.id) === String(mapped.id))) return prev;
+      return [...prev, mapped];
+    });
+    loadTodayStats();
+  }, []);
+
+  const handleUpdated = useCallback((ev) => {
+    const mapped = {
+      id: ev.id,
+      title: ev.title,
+      description: ev.description,
+      position: {
+        lat: Number(ev.latitude),
+        lng: Number(ev.longitude),
+      },
+      location_address: ev.location_address,
+      starts_at: ev.starts_at,
+      ends_at: ev.ends_at,
+      user_id: ev.user_id,
+      img: ev.img || ev.data?.image?.url || null,
+      category: ev.category ?? ev.data?.category ?? "",
+    };
+    setEvents((prev) => prev.map((p) => (String(p.id) === String(ev.id) ? mapped : p)));
+    setSelectedEvent((s) => (s && String(s.id) === String(ev.id) ? { ...s, ...mapped } : s));
+    loadTodayStats();
+  }, []);
+
+  const handleDeleted = useCallback((payload) => {
+    const id = String(payload.id);
+
+    setEvents((prev) => prev.filter((p) => String(p.id) !== id));
+    setSelectedEvent((s) => (s && String(s.id) === id ? null : s));
+    setClusterEvents((prev) => prev.filter((c) => String(c.id) !== id));
+
+    setClusterIndex((prev) => {
+      return prev > 0 ? prev - 1 : 0;
+    });
+    loadTodayStats();
+  }, []);
+
+  useEffect(() => {
+    socket.on("event:created", handleCreated);
+    socket.on("event:updated", handleUpdated);
+    socket.on("event:deleted", handleDeleted);
 
     return () => {
-      socket.off("event:created", onCreated);
-      socket.off("event:updated", onUpdated);
-      socket.off("event:deleted", onDeleted);
+      socket.off("event:created", handleCreated);
+      socket.off("event:updated", handleUpdated);
+      socket.off("event:deleted", handleDeleted);
     };
-  }, [clusterEvents, clusterIndex]);
+  }, [handleCreated, handleUpdated, handleDeleted]);
 
   // -----------------------------
   // Handlers
@@ -855,7 +845,7 @@ export default function EventMap() {
 
             {searchOpen && (
               <div className={SEARCH_STYLES.mobile + " " + SEARCH_STYLES.desktop}>
-                <div className="relative w-screen left-4 md:w-auto">
+                <div className="relative left-4 w-screen md:w-auto">
                   <div className="bg-base-200/90 flex w-screen flex-col gap-2 rounded-lg p-2 shadow-lg md:w-lg md:flex-row md:items-center md:gap-2 md:rounded-full md:p-2 md:shadow-inner">
                     {/* Mode select */}
                     <select
