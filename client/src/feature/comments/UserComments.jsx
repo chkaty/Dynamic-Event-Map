@@ -120,7 +120,7 @@ export default function UserComments() {
       setComments((prev) => prev.filter((item) => item.comment.id !== commentId));
     } catch (err) {
       console.error("Failed to delete comment:", err);
-      alert("Failed to delete comment");
+      push({ type: "error", message: "Failed to delete comment", autoCloseMs: 5000 });
     } finally {
       setPendingOps((prev) => {
         const next = new Set(prev);
