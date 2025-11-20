@@ -118,6 +118,7 @@ export default function UserComments() {
     try {
       await removeComment(eventId, commentId);
       setComments((prev) => prev.filter((item) => item.comment.id !== commentId));
+      push({ type: "success", message: "Comment deleted", autoCloseMs: 3000 });
     } catch (err) {
       console.error("Failed to delete comment:", err);
       push({ type: "error", message: "Failed to delete comment", autoCloseMs: 5000 });
