@@ -11,7 +11,7 @@ import { useNotifications } from "../../contexts/NotificationContext.jsx";
 
 const CommentListItem = ({ item, onDelete, pending }) => {
   const eventStatus = getEventStatus(item.event);
-  const isExpired = eventStatus === "Event Expired";
+  const isExpired = eventStatus === "Expired";
 
   const handleDelete = async () => {
     if (!confirm("Delete this comment?")) return;
