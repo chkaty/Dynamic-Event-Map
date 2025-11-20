@@ -1,21 +1,18 @@
+// socket.js
 let io = null;
 
 function init(server, opts = {}) {
   const { Server } = require("socket.io");
-  
-  // Parse allowed origins properly
+
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
     : [];
-  
   const allOrigins = Array.from(new Set([
     `http://localhost`,
     `http://localhost:${process.env.FRONTEND_PORT || 3000}`,
     ...allowedOrigins
   ].filter(Boolean)));
-  
-  console.log("Socket.IO CORS allowed origins:", allOrigins);
-  
+
   io = new Server(server, {
     cors: {
       origin: allOrigins,
@@ -27,9 +24,17 @@ function init(server, opts = {}) {
   });
 
   io.on("connection", (socket) => {
-    const origin = socket.handshake.headers.origin || socket.handshake.headers.referer;
-    console.log(`Socket connected: ${socket.id} from ${origin}`);
-    
+    console.log(`Socket connected: ${socket.id}`);
+
+    socket.on("joinEventRoom", (eventId) => {
+      socket.join(`event_${eventId}`);
+      console.log(`Socket ${socket.id} joined room event_${eventId}`);
+    });
+    socket.on("leaveEventRoom", (eventId) => {
+      socket.leave(`event_${eventId}`);
+      console.log(`Socket ${socket.id} left room event_${eventId}`);
+    });
+
     socket.on("disconnect", (reason) => {
       console.log(`Socket disconnected: ${socket.id}, reason: ${reason}`);
     });

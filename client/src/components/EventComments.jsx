@@ -16,7 +16,7 @@ export default function EventComments({ eventId }) {
   // ---------------------------
   // Load Comments
   // ---------------------------
-  const load = useCallback(async () => {
+  const loadComments = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -36,36 +36,26 @@ export default function EventComments({ eventId }) {
   const handleAdd = useCallback(
     async (e) => {
       e?.preventDefault();
-
-      if (!user) {
-        setError("You must be logged in to post comments");
-        return;
-      }
+      if (!user) return setError("You must be logged in to post comments");
 
       const trimmed = text.trim();
-      if (!trimmed) {
-        setError("Please enter a comment");
-        return;
-      }
+      if (!trimmed) return setError("Please enter a comment");
 
-      setError("");
       setLoading(true);
+      setError("");
 
       try {
         const created = await addComment(eventId, trimmed);
-
-        setComments((prev) => [
-          created, // always prepend
-          ...prev.filter((c) => c.id !== created.id),
-        ]);
-
+        setComments((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
         setText("");
         push({ type: "success", message: "Comment posted successfully", autoCloseMs: 2000 });
       } catch (err) {
         console.warn("post failed", err);
-        const msg = err.message || "Failed to post comment";
-        setError(msg);
-        push({ type: "error", message: msg, autoCloseMs: 5000 });
+        push({
+          type: "error",
+          message: err.message || "Failed to post comment",
+          autoCloseMs: 5000,
+        });
       } finally {
         setLoading(false);
       }
@@ -82,13 +72,14 @@ export default function EventComments({ eventId }) {
       try {
         await removeComment(eventId, id);
         setComments((prev) => prev.filter((c) => c.id !== id));
-
         push({ type: "success", message: "Comment deleted successfully", autoCloseMs: 2000 });
       } catch (err) {
         console.warn("delete failed", err);
-        const msg = err.message || "Failed to delete comment";
-        setError(msg);
-        push({ type: "error", message: msg, autoCloseMs: 5000 });
+        push({
+          type: "error",
+          message: err.message || "Failed to delete comment",
+          autoCloseMs: 5000,
+        });
       } finally {
         setLoading(false);
       }
@@ -97,12 +88,11 @@ export default function EventComments({ eventId }) {
   );
 
   // ---------------------------
-  // Real-time Handlers
+  // Real-time Handlers (room-based)
   // ---------------------------
   const onCommentCreated = useCallback(
     (payload) => {
       if (Number(payload.eventId) !== Number(eventId)) return;
-
       setComments((prev) => [payload, ...prev.filter((c) => String(c.id) !== String(payload.id))]);
     },
     [eventId]
@@ -111,29 +101,29 @@ export default function EventComments({ eventId }) {
   const onCommentDeleted = useCallback(
     (payload) => {
       if (Number(payload.eventId) !== Number(eventId)) return;
-
       setComments((prev) => prev.filter((c) => String(c.id) !== String(payload.id)));
     },
     [eventId]
   );
 
   // ---------------------------
-  // Effect: Load + Realtime
+  // Effects
   // ---------------------------
   useEffect(() => {
     if (!eventId) return;
 
-    load();
+    loadComments();
 
-    socket.on("comment:created", onCommentCreated);
-    socket.on("comment:deleted", onCommentDeleted);
+    // Subscribe to room-specific events
+    socket.on(`comment:created:${eventId}`, onCommentCreated);
+    socket.on(`comment:deleted:${eventId}`, onCommentDeleted);
 
     return () => {
-      socket.off("comment:created", onCommentCreated);
-      socket.off("comment:deleted", onCommentDeleted);
+      socket.off(`comment:created:${eventId}`, onCommentCreated);
+      socket.off(`comment:deleted:${eventId}`, onCommentDeleted);
     };
-  }, [eventId, load, onCommentCreated, onCommentDeleted]);
-
+  }, [eventId, loadComments, onCommentCreated, onCommentDeleted]);
+  
   // ---------------------------
   // Render
   // ---------------------------
