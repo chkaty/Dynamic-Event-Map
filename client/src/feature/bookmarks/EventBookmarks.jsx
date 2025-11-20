@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef, useLayoutEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useBookmarks } from "../../hooks";
 import { getEventStatus, normalize } from "../../utils/date";
 import EventStatusBadge from "../../components/EventStatusBadge";
