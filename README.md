@@ -380,7 +380,29 @@ It can also be triggered manually with:
 
 - Go to GitHub ACTIONS → Docker Cleanup
 
-## User Guide and Features
+## Features
+
+When a user is not logged in, they can access the following:
+- Search: locations, addresses, events in Toronto
+- View: events including event details and number of people who have bookmarked an event
+- Filter: view events by distance of current position, category, and start time
+  - Distance: adjust radius of events from current position in km. When set at 0 km, all events satisfying the other criteria is shown.
+  - Category: can view all event categories or select from individual categories - 
+  - Time: can filter from events starting within 24 hours, 7 days, or 30 days of the current time, or starting at any time
+Data ingestion is performed automatically and weekly from the official Toronto Events and Festivals Calendar API, which includes a cleanup of expired events and clearing of the Redis cache. This ensures the map remains up-to-date on included events.
+
+Users can authenticate themselves by logging in with their Google account to gain access to the following features:
+- Add, edit and delete your own events complete with start time, end time, address, category and description
+- Add and delete comments on any event
+- Add and remove personal bookmarks from any individual events
+- View and sort bookmarks in the Bookmarks tab
+These additions, edits or deletions can be viewed in real time on the application front end with the implementation of web sockets.
+
+Additional advanced features for workflow:
+- CI/CD pipeline
+- Backup and recovery
+
+## User Guide
 
 The main page of the **Dynamic Event Map** application features the layout of Toronto from the Google Maps API, which can be navigated by dragging along the map and zooming in/out by scrolling. Red markers and blue markers with numbers indicate an event or events in the area. Zooming in allows more events to be easily spotted and more accessible with red markers, while zooming out will bunch events in the same general location together as blue markers. All events represented by a blue marker can be accessed by clicking on one and scrolling through using the arrows in the side bar.
 
