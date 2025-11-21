@@ -96,8 +96,11 @@ docker-compose -f docker-compose.dev.yml up --build
 
 Run the following script to automatically deploy a local Docker Swarm stack for development and testing:
 
-```
+```powershell
 .\infra\scripts\deploy_local_swarm.ps1
+
+#or
+.\infra\scripts\deploy_local_swarm.ps1 -NoBuild
 ```
 
 ### 1. Initialize Docker Swarm
@@ -426,4 +429,4 @@ This application uses public event data from the **City of Toronto's Open Data P
 - **Event Images**: Provided via the Open Data API, included under the same license
 - **User-Generated Content**: All user-submitted events and content remain the property of their respective creators
 
-
+For questions about data usage, contact Toronto Open Data at opendata@toronto.ca
