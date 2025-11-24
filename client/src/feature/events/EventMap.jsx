@@ -383,7 +383,7 @@ export default function EventMap() {
     } catch (err) {
       console.warn("failed to load today's summary", err);
     }
-  }, []);
+  }, [push]);
 
   // initial mount
   useEffect(() => {
