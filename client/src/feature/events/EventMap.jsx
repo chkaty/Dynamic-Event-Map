@@ -770,7 +770,7 @@ export default function EventMap() {
     mobile: ` fixed top-0 right-0 bottom-0 z-50 w-100 bg-base-100 shadow-lg transition-transform duration-300 overflow-hidden ${
       selectedEvent ? "translate-x-0" : "translate-x-full"
     }`,
-    desktop: `bg-base-100 md:overflow-hidden md:absolute md:top-0 md:right-0 md:bottom-4 md:z-20 md:w-1/4 md:overflow-auto md:transition-transform md:duration-300 ${
+    desktop: `bg-base-100 md:absolute md:top-0 md:right-0 md:bottom-4 md:z-20 md:w-1/4 md:overflow-auto md:transition-transform md:duration-300 ${
       selectedEvent ? "md:translate-x-0" : "md:translate-x-full"
     }`,
   };
