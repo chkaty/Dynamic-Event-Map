@@ -448,7 +448,7 @@ export default function EventMap() {
       return prev > 0 ? prev - 1 : 0;
     });
     loadTodayStats();
-  }, []);
+  }, [loadTodayStats]);
 
   // Join event room
   useEffect(() => {
