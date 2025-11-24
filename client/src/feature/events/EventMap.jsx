@@ -393,7 +393,7 @@ export default function EventMap() {
 
     loadEvents();
     loadTodayStats();
-  }, []);
+  }, [loadEvents, loadTodayStats]);
 
   const handleCreated = useCallback((ev) => {
     const mapped = {
