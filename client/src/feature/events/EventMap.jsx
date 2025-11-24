@@ -344,7 +344,7 @@ export default function EventMap() {
     };
   }, []);
 
-  // Handle event
+  // Handle events
   const loadEvents = useCallback(async () => {
     try {
       const rows = await fetchEvents();
