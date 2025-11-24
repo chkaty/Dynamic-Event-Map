@@ -414,7 +414,7 @@ export default function EventMap() {
       return [...prev, mapped];
     });
     loadTodayStats();
-  }, []);
+  }, [loadTodayStats]);
 
   const handleUpdated = useCallback((ev) => {
     const mapped = {
