@@ -9,7 +9,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN chmod +x wait-for-redis.sh && dos2unix wait-for-redis.sh || sed -i 's/\r$//' wait-for-redis.sh
+RUN chmod +x wait-for-redis.sh && sed -i 's/\r$//' wait-for-redis.sh
 EXPOSE 5000
 USER node
 CMD ["sh", "wait-for-redis.sh"]
