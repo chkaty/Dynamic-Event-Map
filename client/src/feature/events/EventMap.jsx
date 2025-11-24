@@ -369,7 +369,7 @@ export default function EventMap() {
       console.warn("failed to load events", err);
       push({ type: "error", message: "Failed to load events", autoCloseMs: 5000 });
     }
-  }, []);
+  }, [push]);
 
   const loadTodayStats = useCallback(async () => {
     try {
