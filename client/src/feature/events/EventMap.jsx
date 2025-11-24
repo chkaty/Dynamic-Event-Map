@@ -435,7 +435,7 @@ export default function EventMap() {
     setEvents((prev) => prev.map((p) => (String(p.id) === String(ev.id) ? mapped : p)));
     setSelectedEvent((s) => (s && String(s.id) === String(ev.id) ? { ...s, ...mapped } : s));
     loadTodayStats();
-  }, []);
+  }, [loadTodayStats]);
 
   const handleDeleted = useCallback((payload) => {
     const id = String(payload.id);
